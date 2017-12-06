@@ -18,3 +18,5 @@ $ Racket income-statement-transform-load.rkt
 The provided schema.sql file shows the expected schema within the target PostgreSQL instance. 
 This process assumes you can write to a /var/tmp/zacks folder. This process also assumes you have loaded your database with NASDAQ symbol
 file information. This data is provided by the [nasdaq-symbols](https://github.com/evdubs/nasdaq-symbols) project.
+
+The above process will download around 2GB worth of HTML documents over many hours. It is encouraged to compress these files when you are done processing them.
