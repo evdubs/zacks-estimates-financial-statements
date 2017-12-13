@@ -159,6 +159,7 @@ insert into zacks.sales_estimate
   act_symbol,
   date,
   period,
+  period_end_date,
   consensus,
   count,
   high,
@@ -173,61 +174,7 @@ insert into zacks.sales_estimate
     when 'current-year' then 'Current Year'::zacks.estimate_period
     when 'next-year' then 'Next Year'::zacks.estimate_period
   end,
-  case $4
-    when 'NA' then NULL
-    else $4::decimal
-  end,
-  case $5
-    when 'NA' then NULL
-    else $5::smallint
-  end,
-  case $6
-    when 'NA' then NULL
-    else $6::decimal
-  end,
-  case $7
-    when 'NA' then NULL
-    else $7::decimal
-  end,
-  case $8
-    when 'NA' then NULL
-    else $8::decimal
-  end
-) on conflict (act_symbol, date, period) do nothing;
-"
-                                              ticker-symbol
-                                              (date->string folder-date "~1")
-                                              (symbol->string period)
-                                              (estimate-figure xexp #:section 'sales-estimates #:period period #:entry 'consensus)
-                                              (estimate-figure xexp #:section 'sales-estimates #:period period #:entry 'count)
-                                              (estimate-figure xexp #:section 'sales-estimates #:period period #:entry 'high)
-                                              (estimate-figure xexp #:section 'sales-estimates #:period period #:entry 'low)
-                                              (estimate-figure xexp #:section 'sales-estimates #:period period #:entry 'year-ago))
-                                  (query-exec dbc "
-insert into zacks.eps_estimate
-(
-  act_symbol,
-  date,
-  period,
-  consensus,
-  recent,
-  count,
-  high,
-  low,
-  year_ago
-) values (
-  $1,
-  $2::text::date,
-  case $3
-    when 'current-quarter' then 'Current Quarter'::zacks.estimate_period
-    when 'next-quarter' then 'Next Quarter'::zacks.estimate_period
-    when 'current-year' then 'Current Year'::zacks.estimate_period
-    when 'next-year' then 'Next Year'::zacks.estimate_period
-  end,
-  case $4
-    when 'NA' then NULL
-    else $4::decimal
-  end,
+  to_date($4, 'DD/MM/YYYY') + interval '1 month' - interval '1 day',
   case $5
     when 'NA' then NULL
     else $5::decimal
@@ -253,9 +200,68 @@ insert into zacks.eps_estimate
                                               ticker-symbol
                                               (date->string folder-date "~1")
                                               (symbol->string period)
+                                              (string-append "01/" (estimate-figure xexp #:section 'sales-estimates #:period period #:entry 'date))
+                                              (estimate-figure xexp #:section 'sales-estimates #:period period #:entry 'consensus)
+                                              (estimate-figure xexp #:section 'sales-estimates #:period period #:entry 'count)
+                                              (estimate-figure xexp #:section 'sales-estimates #:period period #:entry 'high)
+                                              (estimate-figure xexp #:section 'sales-estimates #:period period #:entry 'low)
+                                              (estimate-figure xexp #:section 'sales-estimates #:period period #:entry 'year-ago))
+                                  (query-exec dbc "
+insert into zacks.eps_estimate
+(
+  act_symbol,
+  date,
+  period,
+  period_end_date,
+  consensus,
+  count,
+  recent,
+  high,
+  low,
+  year_ago
+) values (
+  $1,
+  $2::text::date,
+  case $3
+    when 'current-quarter' then 'Current Quarter'::zacks.estimate_period
+    when 'next-quarter' then 'Next Quarter'::zacks.estimate_period
+    when 'current-year' then 'Current Year'::zacks.estimate_period
+    when 'next-year' then 'Next Year'::zacks.estimate_period
+  end,
+  to_date($4, 'DD/MM/YYYY') + interval '1 month' - interval '1 day',
+  case $5
+    when 'NA' then NULL
+    else $5::decimal
+  end,
+  case $6
+    when 'NA' then NULL
+    else $6::smallint
+  end,
+  case $7
+    when 'NA' then NULL
+    else $7::decimal
+  end,
+  case $8
+    when 'NA' then NULL
+    else $8::decimal
+  end,
+  case $9
+    when 'NA' then NULL
+    else $9::decimal
+  end,
+  case $10
+    when 'NA' then NULL
+    else $10::decimal
+  end
+) on conflict (act_symbol, date, period) do nothing;
+"
+                                              ticker-symbol
+                                              (date->string folder-date "~1")
+                                              (symbol->string period)
+                                              (string-append "01/" (estimate-figure xexp #:section 'eps-estimates #:period period #:entry 'date))
                                               (estimate-figure xexp #:section 'eps-estimates #:period period #:entry 'consensus)
-                                              (estimate-figure xexp #:section 'eps-estimates #:period period #:entry 'recent)
                                               (estimate-figure xexp #:section 'eps-estimates #:period period #:entry 'count)
+                                              (estimate-figure xexp #:section 'eps-estimates #:period period #:entry 'recent)
                                               (estimate-figure xexp #:section 'eps-estimates #:period period #:entry 'high)
                                               (estimate-figure xexp #:section 'eps-estimates #:period period #:entry 'low)
                                               (estimate-figure xexp #:section 'eps-estimates #:period period #:entry 'year-ago))
@@ -265,6 +271,7 @@ insert into zacks.eps_revision
   act_symbol,
   date,
   period,
+  period_end_date,
   up_7,
   up_30,
   up_60,
@@ -280,10 +287,7 @@ insert into zacks.eps_revision
     when 'current-year' then 'Current Year'::zacks.estimate_period
     when 'next-year' then 'Next Year'::zacks.estimate_period
   end,
-  case $4
-    when 'NA' then NULL
-    else $4::smallint
-  end,
+  to_date($4, 'DD/MM/YYYY') + interval '1 month' - interval '1 day',
   case $5
     when 'NA' then NULL
     else $5::smallint
@@ -303,12 +307,17 @@ insert into zacks.eps_revision
   case $9
     when 'NA' then NULL
     else $9::smallint
+  end,
+  case $10
+    when 'NA' then NULL
+    else $10::smallint
   end
 ) on conflict (act_symbol, date, period) do nothing;
 "
                                               ticker-symbol
                                               (date->string folder-date "~1")
                                               (symbol->string period)
+                                              (string-append "01/" (estimate-figure xexp #:section 'eps-revisions #:period period #:entry 'date))
                                               (estimate-figure xexp #:section 'eps-revisions #:period period #:entry 'up-7)
                                               (estimate-figure xexp #:section 'eps-revisions #:period period #:entry 'up-30)
                                               (estimate-figure xexp #:section 'eps-revisions #:period period #:entry 'up-60)
@@ -321,6 +330,7 @@ insert into zacks.eps_perception
   act_symbol,
   date,
   period,
+  period_end_date,
   most_accurate
 ) values (
   $1,
@@ -331,15 +341,17 @@ insert into zacks.eps_perception
     when 'current-year' then 'Current Year'::zacks.estimate_period
     when 'next-year' then 'Next Year'::zacks.estimate_period
   end,
-  case $4
+  to_date($4, 'DD/MM/YYYY') + interval '1 month' - interval '1 day',
+  case $5
     when 'NA' then NULL
-    else $4::decimal
+    else $5::decimal
   end
 ) on conflict (act_symbol, date, period) do nothing;
 "
                                               ticker-symbol
                                               (date->string folder-date "~1")
                                               (symbol->string period)
+                                              (string-append "01/" (estimate-figure xexp #:section 'eps-upside #:period period #:entry 'date))
                                               (estimate-figure xexp #:section 'eps-upside #:period period #:entry 'most-accurate)))
                                 (list 'current-quarter 'next-quarter 'current-year 'next-year))
                       (for-each (λ (quarter)
@@ -348,7 +360,7 @@ insert into zacks.eps_history
 (
   act_symbol,
   date,
-  report_date,
+  period_end_date,
   reported,
   estimate
 ) values (
@@ -363,7 +375,7 @@ insert into zacks.eps_history
     when 'NA' then NULL
     else $5::decimal
   end
-) on conflict (act_symbol, date, report_date) do nothing;
+) on conflict (act_symbol, date, period_end_date) do nothing;
 "
                                               ticker-symbol
                                               (date->string folder-date "~1")

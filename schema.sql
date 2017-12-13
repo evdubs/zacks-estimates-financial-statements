@@ -124,6 +124,7 @@ CREATE TABLE zacks.eps_estimate
     act_symbol text COLLATE pg_catalog."default" NOT NULL,
     date date NOT NULL,
     period zacks.estimate_period NOT NULL,
+    period_end_date date NOT NULL,
     consensus numeric,
     recent numeric,
     count smallint,
@@ -141,10 +142,10 @@ CREATE TABLE zacks.eps_history
 (
     act_symbol text COLLATE pg_catalog."default" NOT NULL,
     date date NOT NULL,
-    report_date date NOT NULL,
+    period_end_date date NOT NULL,
     reported numeric,
     estimate numeric,
-    CONSTRAINT eps_history_pkey PRIMARY KEY (act_symbol, date, report_date),
+    CONSTRAINT eps_history_pkey PRIMARY KEY (act_symbol, date, period_end_date),
     CONSTRAINT eps_history_act_symbol_fkey FOREIGN KEY (act_symbol)
         REFERENCES nasdaq.symbol (act_symbol) MATCH SIMPLE
         ON UPDATE NO ACTION
@@ -156,6 +157,7 @@ CREATE TABLE zacks.eps_perception
     act_symbol text COLLATE pg_catalog."default" NOT NULL,
     date date NOT NULL,
     period zacks.estimate_period NOT NULL,
+    period_end_date date NOT NULL,
     most_accurate numeric,
     CONSTRAINT eps_perception_pkey PRIMARY KEY (act_symbol, date, period),
     CONSTRAINT eps_perception_act_symbol_fkey FOREIGN KEY (act_symbol)
@@ -169,6 +171,7 @@ CREATE TABLE zacks.eps_revision
     act_symbol text COLLATE pg_catalog."default" NOT NULL,
     date date NOT NULL,
     period zacks.estimate_period NOT NULL,
+    period_end_date date NOT NULL,
     up_7 smallint,
     up_30 smallint,
     up_60 smallint,
@@ -235,6 +238,7 @@ CREATE TABLE zacks.sales_estimate
     act_symbol text COLLATE pg_catalog."default" NOT NULL,
     date date NOT NULL,
     period zacks.estimate_period NOT NULL,
+    period_end_date date NOT NULL,
     consensus numeric,
     count smallint,
     high numeric,
