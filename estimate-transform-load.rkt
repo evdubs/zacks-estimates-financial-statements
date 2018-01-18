@@ -200,7 +200,8 @@ insert into zacks.sales_estimate
                                               ticker-symbol
                                               (date->string folder-date "~1")
                                               (symbol->string period)
-                                              (string-append "01/" (estimate-figure xexp #:section 'sales-estimates #:period period #:entry 'date))
+                                              ; Use eps-estimates date as we sometimes have worse coverage with sales estimates than eps estimates
+                                              (string-append "01/" (estimate-figure xexp #:section 'eps-estimates #:period period #:entry 'date))
                                               (estimate-figure xexp #:section 'sales-estimates #:period period #:entry 'consensus)
                                               (estimate-figure xexp #:section 'sales-estimates #:period period #:entry 'count)
                                               (estimate-figure xexp #:section 'sales-estimates #:period period #:entry 'high)
