@@ -2,6 +2,7 @@
 
 (require db)
 (require net/url)
+(require racket/cmdline)
 (require srfi/19) ; Time Data Types and Procedures
 (require tasks)
 (require threading)
@@ -33,25 +34,26 @@
                  (copy-port _ out)))
     #:exists 'replace))
 
-(display "db user [user]: ")
-(flush-output)
-(define db-user
-  (let ([db-user-input (read-line)])
-    (if (equal? "" db-user-input) "user"
-        db-user-input)))
+(define db-user (make-parameter "user"))
 
-(display "db name [local]: ")
-(flush-output)
-(define db-name
-  (let ([db-name-input (read-line)])
-    (if (equal? "" db-name-input) "local"
-        db-name-input)))
+(define db-name (make-parameter "local"))
 
-(display "db pass []: ")
-(flush-output)
-(define db-pass (read-line))
+(define db-pass (make-parameter ""))
 
-(define dbc (postgresql-connect #:user db-user #:database db-name #:password db-pass))
+(command-line
+ #:program "racket financial-statement-extract.rkt"
+ #:once-each
+ [("-n" "--db-name") name
+                     "Database name. Defaults to 'local'"
+                     (db-name name)]
+ [("-p" "--db-pass") password
+                     "Database password"
+                     (db-pass password)]
+ [("-u" "--db-user") user
+                     "Database user name. Defaults to 'user'"
+                     (db-user user)])
+
+(define dbc (postgresql-connect #:user (db-user) #:database (db-name) #:password (db-pass)))
 
 (define symbols (query-list dbc "
 select
