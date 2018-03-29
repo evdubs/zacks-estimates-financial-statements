@@ -4,15 +4,15 @@ These Racket programs will download the Zacks "Detailed Estimates" and "Financia
 estimates/statement data into a PostgreSQL database. The intended usage is:
 
 ```bash
-$ Racket estimate-extract.rkt
-$ Racket estimate-transform-load.rkt
+$ racket estimate-extract.rkt
+$ racket estimate-transform-load.rkt
 ```
 
 ```bash
-$ Racket financial-statement-extract.rkt
-$ Racket balance-sheet-transform-load.rkt
-$ Racket cash-flow-statement-transform-load.rkt
-$ Racket income-statement-transform-load.rkt
+$ racket financial-statement-extract.rkt
+$ racket balance-sheet-transform-load.rkt
+$ racket cash-flow-statement-transform-load.rkt
+$ racket income-statement-transform-load.rkt
 ```
 
 The provided schema.sql file shows the expected schema within the target PostgreSQL instance. 
