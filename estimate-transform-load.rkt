@@ -62,12 +62,26 @@
                                            ['date (values 1 `thead `th)]
                                            ['reported (values 1 `tbody `td)]
                                            ['estimate (values 2 `tbody `td)])])
-    (~> ((sxpath `(html (body (@ (equal? (id "home"))))
-                        (div (@ (equal? (id "main_content"))))
-                        (div (@ (equal? (id "right_content")))) (div 3)
-                        (div (@ (equal? (id "detailed_estimate_full_body"))))
-                        (section (@ (equal? (id ,section-id))))
-                        table ,thead-tbody (tr ,row) (,th-td ,col))) xexp)
+    (~> (cond
+          ; Reports downloaded before 2018-04-15 used a slightly different sxpath
+          ; The following code might be helpful for finding these differences in the future:
+          ; 
+          ; (define in-file (open-input-file "/var/tmp/zacks/estimates/2017-10-26/AA.detailed-estimates.html"))
+          ; (define in-xexp (html->xexp in-file))
+          ; (webscraperhelper '(td (@ (class "alpha")) "Down Last 60 Days") in-xexp)
+          [(time<? (date->time-utc (folder-date)) (date->time-utc (string->date "2018-04-15" "~Y-~m-~d")))
+           ((sxpath `(html (body (@ (equal? (id "home"))))
+                           (div (@ (equal? (id "main_content"))))
+                           (div (@ (equal? (id "right_content")))) (div 3)
+                           (div (@ (equal? (id "detailed_estimate_full_body"))))
+                           (section (@ (equal? (id ,section-id))))
+                           table ,thead-tbody (tr ,row) (,th-td ,col))) xexp)]
+          [else
+           ((sxpath `(html (body (@ (equal? (id "home"))))
+                           (div 9)
+                           (div (@ (equal? (id "detailed_estimate_full_body"))))
+                           (section (@ (equal? (id ,section-id))))
+                           table ,thead-tbody (tr ,row) (,th-td ,col))) xexp)])
         (first-second _)
         (flatten _)
         (last _)
