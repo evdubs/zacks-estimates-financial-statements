@@ -62,13 +62,27 @@
                                            ['total-liabilities-and-equity (values 8 `tbody `td)]
                                            ['shares-outstanding (values 10 `tbody `td)]
                                            ['book-value-per-share (values 11 `tbody `td)])])
-    (~> ((sxpath `(html (body (@ (equal? (id "home"))))
-                        (div (@ (equal? (id "main_content"))))
-                        (div (@ (equal? (id "right_content"))))
-                        (div (@ (equal? (class "quote_body_full"))))
-                        (section (@ (equal? (id "income_statements_tabs"))))
-                        (div (@ (equal? (id ,section-id))))
-                        (table ,table-id) ,thead-tbody (tr ,row) (,th-td ,col))) xexp)
+    (~> (cond
+          ; Reports downloaded before 2018-05-08 used a slightly different sxpath
+          ; The following code might be helpful for finding these differences in the future:
+          ; 
+          ; (define in-file (open-input-file "/var/tmp/zacks/balance-sheet/2018-05-08/AA.balance-sheet.html"))
+          ; (define in-xexp (html->xexp in-file))
+          ; (webscraperhelper '(td (@ (class "alpha")) "Preferred Stock") in-xexp)
+          [(time<? (date->time-utc (folder-date)) (date->time-utc (string->date "2018-05-08" "~Y-~m-~d")))
+           ((sxpath `(html (body (@ (equal? (id "home"))))
+                           (div (@ (equal? (id "main_content"))))
+                           (div (@ (equal? (id "right_content"))))
+                           (div (@ (equal? (class "quote_body_full"))))
+                           (section (@ (equal? (id "income_statements_tabs"))))
+                           (div (@ (equal? (id ,section-id))))
+                           (table ,table-id) ,thead-tbody (tr ,row) (,th-td ,col))) xexp)]
+          [else
+           ((sxpath `(html (body (@ (equal? (id "home"))))
+                           (div 11)
+                           (section (@ (equal? (id "income_statements_tabs"))))
+                           (div (@ (equal? (id ,section-id))))
+                           (table ,table-id) ,thead-tbody (tr ,row) (,th-td ,col))) xexp)])
         (flatten _)
         (last _)
         (string-trim _)
@@ -120,6 +134,42 @@
                                                            (rollback-transaction dbc))])
                                 (start-transaction dbc)
                                 (query-exec dbc "
+-- We use the common table expression below in order to check if we're receiving
+-- bad values from Zacks. When the new fiscal year occurs, Zacks apparently has a
+-- bug where values from the prior year are copied into the new year column. We
+-- guard against that by checking data against the previous year's data and not
+-- inserting it if it is exactly the same by trying to insert a NULL act_symbol.
+-- A better way might be with a stored procedure that can return a meaningful error.
+with should_not_insert as (
+  select
+    bool_and(
+      cash_and_equivalents = $4::text::decimal * 1e6 and
+      receivables = $5::text::decimal * 1e6 and
+      notes_receivable = $6::text::decimal * 1e6 and
+      inventories = $7::text::decimal * 1e6 and
+      other_current_assets = $8::text::decimal * 1e6 and
+      total_current_assets = $9::text::decimal * 1e6 and
+      net_property_and_equipment = $10::text::decimal * 1e6 and
+      investments_and_advances = $11::text::decimal * 1e6 and
+      other_non_current_assets = $12::text::decimal * 1e6 and
+      deferred_charges = $13::text::decimal * 1e6 and
+      intangibles = $14::text::decimal * 1e6 and
+      deposits_and_other_assets = $15::text::decimal * 1e6 and
+      total_assets = $16::text::decimal * 1e6
+    ) as sni
+  from
+    zacks.balance_sheet_assets
+  where
+    act_symbol = $1 and
+    case $3
+      when 'annual' then
+        period = 'Year'::zacks.statement_period and
+        date = $2::text::date - interval '1 year'
+      when 'quarterly' then
+        period = 'Quarter'::zacks.statement_period and
+        date = $2::text::date + interval '1 day' - interval '3 months' - interval '1 day'
+    end
+)
 insert into zacks.balance_sheet_assets
 (
   act_symbol,
@@ -139,7 +189,10 @@ insert into zacks.balance_sheet_assets
   deposits_and_other_assets,
   total_assets
 ) values (
-  $1,
+  case (select sni from should_not_insert)
+    when true then NULL
+    else $1
+  end,
   $2::text::date,
   case $3
     when 'annual' then 'Year'::zacks.statement_period
@@ -191,6 +244,40 @@ insert into zacks.balance_sheet_assets
                                             (balance-sheet-figure xexp #:section 'assets #:period (first period-date) #:date (second period-date)
                                                                   #:entry 'total-assets))
                                 (query-exec dbc "
+-- See note in balance_sheet_assets query above.
+with should_not_insert as (
+  select
+    bool_and(
+      notes_payable = $4::text::decimal * 1e6 and
+      accounts_payable = $5::text::decimal * 1e6 and
+      current_portion_long_term_debt = $6::text::decimal * 1e6 and
+      current_portion_capital_leases = $7::text::decimal * 1e6 and
+      accrued_expenses = $8::text::decimal * 1e6 and
+      income_taxes_payable = $9::text::decimal * 1e6 and
+      other_current_liabilities = $10::text::decimal * 1e6 and
+      total_current_liabilities = $11::text::decimal * 1e6 and
+      mortgages = $12::text::decimal * 1e6 and
+      deferred_taxes_or_income = $13::text::decimal * 1e6 and
+      convertible_debt = $14::text::decimal * 1e6 and
+      long_term_debt = $15::text::decimal * 1e6 and
+      non_current_capital_leases = $16::text::decimal * 1e6 and
+      other_non_current_liabilities = $17::text::decimal * 1e6 and
+      minority_interest = $18::text::decimal * 1e6 and
+      total_liabilities = $19::text::decimal * 1e6
+    ) as sni
+  from
+    zacks.balance_sheet_liabilities
+  where
+    act_symbol = $1 and
+    case $3
+      when 'annual' then
+        period = 'Year'::zacks.statement_period and
+        date = $2::text::date - interval '1 year'
+      when 'quarterly' then
+        period = 'Quarter'::zacks.statement_period and
+        date = $2::text::date + interval '1 day' - interval '3 months' - interval '1 day'
+    end
+)
 insert into zacks.balance_sheet_liabilities
 (
   act_symbol,
@@ -213,7 +300,10 @@ insert into zacks.balance_sheet_liabilities
   minority_interest,
   total_liabilities
 ) values (
-  $1,
+  case (select sni from should_not_insert)
+    when true then NULL
+    else $1
+  end,
   $2::text::date,
   case $3
     when 'annual' then 'Year'::zacks.statement_period
@@ -274,6 +364,34 @@ insert into zacks.balance_sheet_liabilities
                                             (balance-sheet-figure xexp #:section 'liabilities #:period (first period-date) #:date (second period-date)
                                                                   #:entry 'total-liabilities))
                                 (query-exec dbc "
+-- See note in balance_sheet_assets query above.
+with should_not_insert as (
+  select
+    bool_and(
+      preferred_stock = $4::text::decimal * 1e6 and
+      common_stock = $5::text::decimal * 1e6 and
+      capital_surplus = $6::text::decimal * 1e6 and
+      retained_earnings = $7::text::decimal * 1e6 and
+      other_equity = $8::text::decimal * 1e6 and
+      treasury_stock = $9::text::decimal * 1e6 and
+      total_equity = $10::text::decimal * 1e6 and
+      total_liabilities_and_equity = $11::text::decimal * 1e6 and
+      shares_outstanding = $12::text::decimal * 1e6 and
+      book_value_per_share = $13::text::decimal
+    ) as sni
+  from
+    zacks.balance_sheet_equity
+  where
+    act_symbol = $1 and
+    case $3
+      when 'annual' then
+        period = 'Year'::zacks.statement_period and
+        date = $2::text::date - interval '1 year'
+      when 'quarterly' then
+        period = 'Quarter'::zacks.statement_period and
+        date = $2::text::date + interval '1 day' - interval '3 months' - interval '1 day'
+    end
+)
 insert into zacks.balance_sheet_equity
 (
   act_symbol,
@@ -290,7 +408,10 @@ insert into zacks.balance_sheet_equity
   shares_outstanding,
   book_value_per_share
 ) values (
-  $1,
+  case (select sni from should_not_insert)
+    when true then NULL
+    else $1
+  end,
   $2::text::date,
   case $3
     when 'annual' then 'Year'::zacks.statement_period
@@ -334,6 +455,6 @@ insert into zacks.balance_sheet_equity
                                                                   #:entry 'book-value-per-share))
                                 (commit-transaction dbc)))
                             (cartesian-product (list 'annual 'quarterly)
-                                               (list 'most-recent 'second-most-recent 'third-most-recent 'fourth-most-recent 'fifth-most-recent)))))))))
+                                               (list 'fifth-most-recent 'fourth-most-recent 'third-most-recent 'second-most-recent 'most-recent)))))))))
 
 (disconnect dbc)

@@ -39,19 +39,33 @@
                                            ['average-shares (values (+ 2 period-offset) 1 `tbody `td)]
                                            ['diluted-eps-before-non-recurring-items (values (+ 2 period-offset) 2 `tbody `td)]
                                            ['diluted-net-eps (values (+ 2 period-offset) 3 `tbody `td)])])
-    (~> ((sxpath `(html (body (@ (equal? (id "home"))))
-                        (div (@ (equal? (id "main_content"))))
-                        (div (@ (equal? (id "right_content"))))
-                        (div (@ (equal? (class "quote_body_full"))))
-                        (section (@ (equal? (id "income_statements_tabs"))))
-                        (div (@ (equal? (id ,section-id))))
-                        (table ,table-id) ,thead-tbody (tr ,row) (,th-td ,col))) xexp)
+    (~> (cond
+          ; Reports downloaded before 2018-05-08 used a slightly different sxpath
+          ; The following code might be helpful for finding these differences in the future:
+          ; 
+          ; (define in-file (open-input-file "/var/tmp/zacks/income-statement/2018-05-08/AA.income-statement.html"))
+          ; (define in-xexp (html->xexp in-file))
+          ; (webscraperhelper '(td (@ (class "alpha")) "Sales") in-xexp)
+          [(time<? (date->time-utc (folder-date)) (date->time-utc (string->date "2018-05-08" "~Y-~m-~d")))
+           ((sxpath `(html (body (@ (equal? (id "home"))))
+                           (div (@ (equal? (id "main_content"))))
+                           (div (@ (equal? (id "right_content"))))
+                           (div (@ (equal? (class "quote_body_full"))))
+                           (section (@ (equal? (id "income_statements_tabs"))))
+                           (div (@ (equal? (id ,section-id))))
+                           (table ,table-id) ,thead-tbody (tr ,row) (,th-td ,col))) xexp)]
+          [else
+           ((sxpath `(html (body (@ (equal? (id "home"))))
+                           (div 11)
+                           (section (@ (equal? (id "income_statements_tabs"))))
+                           (div (@ (equal? (id ,section-id))))
+                           (table ,table-id) ,thead-tbody (tr ,row) (,th-td ,col))) xexp)])
         (flatten _)
         (last _)
         (string-trim _)
         (string-replace _ "," ""))))
 
-(define base-folder (make-parameter "/var/tmp/zacks/cash-flow-statement"))
+(define base-folder (make-parameter "/var/tmp/zacks/income-statement"))
 
 (define folder-date (make-parameter (current-date)))
 
@@ -97,6 +111,55 @@
                                                            (rollback-transaction dbc))])
                                 (start-transaction dbc)
                                 (query-exec dbc "
+-- We use the common table expression below in order to check if we're receiving
+-- bad values from Zacks. When the new fiscal year occurs, Zacks apparently has a
+-- bug where values from the prior year are copied into the new year column. We
+-- guard against that by checking data against the previous year's data and not
+-- inserting it if it is exactly the same by trying to insert a NULL act_symbol.
+-- A better way might be with a stored procedure that can return a meaningful error.
+with should_not_insert as (
+  select
+    bool_and(
+      sales = $4::text::decimal * 1e6 and
+      cost_of_goods = $5::text::decimal * 1e6 and
+      gross_profit = $6::text::decimal * 1e6 and
+      selling_administrative_depreciation_amortization_expenses = $7::text::decimal * 1e6 and
+      income_after_depreciation_and_amortization = $8::text::decimal * 1e6 and
+      non_operating_income = $9::text::decimal * 1e6 and
+      interest_expense = $10::text::decimal * 1e6 and
+      pretax_income = $11::text::decimal * 1e6 and
+      income_taxes = $12::text::decimal * 1e6 and
+      minority_interest = $13::text::decimal * 1e6 and
+      investment_gains = $14::text::decimal * 1e6 and
+      other_income = $15::text::decimal * 1e6 and
+      income_from_continuing_operations = $16::text::decimal * 1e6 and
+      extras_and_discontinued_operations = $17::text::decimal * 1e6 and
+      net_income = $18::text::decimal * 1e6 and
+      case $3
+        when 'annual' then income_before_depreciation_and_amortization = $19::text::decimal * 1e6
+        when 'quarterly' then income_before_depreciation_and_amortization is null
+      end and
+      case $3
+        when 'annual' then depreciation_and_amortization = $20::text::decimal * 1e6
+        when 'quarterly' then depreciation_and_amortization is null
+      end and
+      average_shares = $21::text::decimal * 1e6 and
+      diluted_eps_before_non_recurring_items = $22::text::decimal and
+      diluted_net_eps = $23::text::decimal
+    ) as sni
+  from
+    zacks.income_statement
+  where
+    act_symbol = $1 and
+    case $3
+      when 'annual' then
+        period = 'Year'::zacks.statement_period and
+        date = $2::text::date - interval '1 year'
+      when 'quarterly' then
+        period = 'Quarter'::zacks.statement_period and
+        date = $2::text::date + interval '1 day' - interval '3 months' - interval '1 day'
+    end
+)
 insert into zacks.income_statement
 (
   act_symbol,
@@ -123,7 +186,10 @@ insert into zacks.income_statement
   diluted_eps_before_non_recurring_items,
   diluted_net_eps
 ) values (
-  $1,
+  case (select sni from should_not_insert)
+    when true then NULL
+    else $1
+  end,
   $2::text::date,
   case $3
     when 'annual' then 'Year'::zacks.statement_period
@@ -182,6 +248,6 @@ insert into zacks.income_statement
                                             (income-statement-figure xexp #:period (first period-date) #:date (second period-date) #:entry 'diluted-net-eps))
                                 (commit-transaction dbc)))
                             (cartesian-product (list 'annual 'quarterly)
-                                               (list 'most-recent 'second-most-recent 'third-most-recent 'fourth-most-recent 'fifth-most-recent)))))))))
+                                               (list 'fifth-most-recent 'fourth-most-recent 'third-most-recent 'second-most-recent 'most-recent)))))))))
 
 (disconnect dbc)

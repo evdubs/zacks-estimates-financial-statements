@@ -41,12 +41,25 @@
                                            ['cash-at-beginning-of-period (values 9 `tbody `td)]
                                            ['cash-at-end-of-period (values 10 `tbody `td)]
                                            ['diluted-net-eps (values 11 `tbody `td)])])
-    (~> ((sxpath `(html (body (@ (equal? (id "home"))))
-                        (div (@ (equal? (id "main_content"))))
-                        (div (@ (equal? (id "right_content"))))
-                        (div (@ (equal? (class "quote_body_full"))))
-                        (section (@ (equal? (id ,section-id))))
-                        table ,thead-tbody (tr ,row) (,th-td ,col))) xexp)
+    (~> (cond
+          ; Reports downloaded before 2018-05-08 used a slightly different sxpath
+          ; The following code might be helpful for finding these differences in the future:
+          ; 
+          ; (define in-file (open-input-file "/var/tmp/zacks/cash-flow-statement/2018-05-08/AA.cash-flow-statement.html"))
+          ; (define in-xexp (html->xexp in-file))
+          ; (webscraperhelper '(td (@ (class "alpha")) "Investments") in-xexp)
+          [(time<? (date->time-utc (folder-date)) (date->time-utc (string->date "2018-05-08" "~Y-~m-~d")))
+           ((sxpath `(html (body (@ (equal? (id "home"))))
+                           (div (@ (equal? (id "main_content"))))
+                           (div (@ (equal? (id "right_content"))))
+                           (div (@ (equal? (class "quote_body_full"))))
+                           (section (@ (equal? (id ,section-id))))
+                           table ,thead-tbody (tr ,row) (,th-td ,col))) xexp)]
+          [else
+           ((sxpath `(html (body (@ (equal? (id "home"))))
+                           (div 11)
+                           (section (@ (equal? (id ,section-id))))
+                           table ,thead-tbody (tr ,row) (,th-td ,col))) xexp)])
         (flatten _)
         (last _)
         (string-trim _)
@@ -98,6 +111,45 @@
                                                            (rollback-transaction dbc))])
                                 (start-transaction dbc)
                                 (query-exec dbc "
+-- We use the common table expression below in order to check if we're receiving
+-- bad values from Zacks. When the new fiscal year occurs, Zacks apparently has a
+-- bug where values from the prior year are copied into the new year column. We
+-- guard against that by checking data against the previous year's data and not
+-- inserting it if it is exactly the same by trying to insert a NULL act_symbol.
+-- A better way might be with a stored procedure that can return a meaningful error.
+with should_not_insert as (
+  select
+    bool_and(
+      net_income = $3::text::decimal * 1e6 and
+      depreciation_amortization_and_depletion = $4::text::decimal * 1e6 and
+      net_change_from_assets = $5::text::decimal * 1e6 and
+      net_cash_from_discontinued_operations = $6::text::decimal * 1e6 and
+      other_operating_activities = $7::text::decimal * 1e6 and
+      net_cash_from_operating_activities = $8::text::decimal * 1e6 and
+      property_and_equipment = $9::text::decimal * 1e6 and
+      acquisition_of_subsidiaries = $10::text::decimal * 1e6 and
+      investments = $11::text::decimal * 1e6 and
+      other_investing_activities = $12::text::decimal * 1e6 and
+      net_cash_from_investing_activities = $13::text::decimal * 1e6 and
+      issuance_of_capital_stock = $14::text::decimal * 1e6 and
+      issuance_of_debt = $15::text::decimal * 1e6 and
+      increase_short_term_debt = $16::text::decimal * 1e6 and
+      payment_of_dividends_and_other_distributions = $17::text::decimal * 1e6 and
+      other_financing_activites = $18::text::decimal * 1e6 and
+      net_cash_from_financing_activites = $19::text::decimal * 1e6 and
+      effect_of_exchange_rate_changes = $20::text::decimal * 1e6 and
+      net_change_in_cash_and_equivalents = $21::text::decimal * 1e6 and
+      cash_at_beginning_of_period = $22::text::decimal * 1e6 and
+      cash_at_end_of_period = $23::text::decimal * 1e6 and
+      diluted_net_eps = $24::text::decimal
+    ) as sni
+  from
+    zacks.cash_flow_statement
+  where
+    act_symbol = $1 and
+    date = $2::text::date - interval '1 year' and
+    period = 'Year'::zacks.statement_period
+)
 insert into zacks.cash_flow_statement
 (
   act_symbol,
@@ -126,7 +178,10 @@ insert into zacks.cash_flow_statement
   cash_at_end_of_period,
   diluted_net_eps
 ) values (
-  $1,
+  case (select sni from should_not_insert)
+    when true then NULL
+    else $1
+  end,
   $2::text::date,
   'Year'::zacks.statement_period,
   $3::text::decimal * 1e6,
@@ -178,6 +233,6 @@ insert into zacks.cash_flow_statement
                                             (cash-flow-statement-figure xexp #:section 'uses-of-funds #:date date #:entry 'cash-at-end-of-period)
                                             (cash-flow-statement-figure xexp #:section 'uses-of-funds #:date date #:entry 'diluted-net-eps))
                                 (commit-transaction dbc)))
-                            (list 'most-recent 'second-most-recent 'third-most-recent 'fourth-most-recent 'fifth-most-recent))))))))
+                            (list 'fifth-most-recent 'fourth-most-recent 'third-most-recent 'second-most-recent 'most-recent))))))))
 
 (disconnect dbc)
