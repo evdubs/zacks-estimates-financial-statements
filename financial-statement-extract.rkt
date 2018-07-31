@@ -69,7 +69,8 @@ where
   case when nasdaq_symbol ~ '[A-Z]{4}[L-Z]'
     then security_name !~ '(Note|Preferred|Right|Unit|Warrant)'
     else true
-  end
+  end and
+  last_seen = (select max(last_seen) from nasdaq.symbol)
 order by
   act_symbol;
 "))
