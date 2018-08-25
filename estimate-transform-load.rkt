@@ -124,6 +124,10 @@
 
 (define dbc (postgresql-connect #:user (db-user) #:database (db-name) #:password (db-pass)))
 
+(define insert-counter 0)
+(define insert-success-counter 0)
+(define insert-failure-counter 0)
+
 (parameterize ([current-directory (string-append (base-folder) "/" (date->string (folder-date) "~1") "/")])
     (for ([p (sequence-filter (λ (p) (string-contains? (path->string p) ".detailed-estimates.html")) (in-directory))])
       (let ([file-name (string-append (base-folder) "/" (date->string (folder-date) "~1") "/" (path->string p))]
@@ -135,7 +139,9 @@
                                                                                 " for date "
                                                                                 (date->string (folder-date) "~1")))
                                                  (displayln ((error-value->string-handler) e 1000))
-                                                 (rollback-transaction dbc))])
+                                                 (rollback-transaction dbc)
+                                                 (set! insert-failure-counter (add1 insert-failure-counter)))])
+                      (set! insert-counter (add1 insert-counter))
                       (start-transaction dbc)
                       (query-exec dbc "
 insert into zacks.rank_score
@@ -396,6 +402,11 @@ insert into zacks.eps_history
                                               (estimate-figure xexp #:section 'eps-surprise #:period quarter #:entry 'reported)
                                               (estimate-figure xexp #:section 'eps-surprise #:period quarter #:entry 'estimate)))
                                 (list 'last-quarter 'two-quarters-ago 'three-quarters-ago 'four-quarters-ago))
-                      (commit-transaction dbc))))))))
+                      (commit-transaction dbc)
+                      (set! insert-success-counter (add1 insert-success-counter)))))))))
 
 (disconnect dbc)
+
+(displayln (string-append "Attempted to insert " (number->string insert-counter) " rows. "
+                          (number->string insert-success-counter) " were successful. "
+                          (number->string insert-failure-counter) " failed."))

@@ -96,6 +96,10 @@
 
 (define dbc (postgresql-connect #:user (db-user) #:database (db-name) #:password (db-pass)))
 
+(define insert-counter 0)
+(define insert-success-counter 0)
+(define insert-failure-counter 0)
+
 (parameterize ([current-directory (string-append (base-folder) "/" (date->string (folder-date) "~1") "/")])
   (for ([p (sequence-filter (λ (p) (string-contains? (path->string p) ".cash-flow-statement.html")) (in-directory))])
     (let ([file-name (string-append (base-folder) "/" (date->string (folder-date) "~1") "/" (path->string p))]
@@ -108,7 +112,9 @@
                                                                                           " for date "
                                                                                           (date->string (folder-date) "~1")))
                                                            (displayln ((error-value->string-handler) e 1000))
-                                                           (rollback-transaction dbc))])
+                                                           (rollback-transaction dbc)
+                                                           (set! insert-failure-counter (add1 insert-failure-counter)))])
+                                (set! insert-counter (add1 insert-counter))
                                 (start-transaction dbc)
                                 (query-exec dbc "
 -- We use the common table expression below in order to check if we're receiving
@@ -232,7 +238,12 @@ insert into zacks.cash_flow_statement
                                             (cash-flow-statement-figure xexp #:section 'uses-of-funds #:date date #:entry 'cash-at-beginning-of-period)
                                             (cash-flow-statement-figure xexp #:section 'uses-of-funds #:date date #:entry 'cash-at-end-of-period)
                                             (cash-flow-statement-figure xexp #:section 'uses-of-funds #:date date #:entry 'diluted-net-eps))
-                                (commit-transaction dbc)))
+                                (commit-transaction dbc)
+                                (set! insert-success-counter (add1 insert-success-counter))))
                             (list 'fifth-most-recent 'fourth-most-recent 'third-most-recent 'second-most-recent 'most-recent))))))))
 
 (disconnect dbc)
+
+(displayln (string-append "Attempted to insert " (number->string insert-counter) " rows. "
+                          (number->string insert-success-counter) " were successful. "
+                          (number->string insert-failure-counter) " failed."))
