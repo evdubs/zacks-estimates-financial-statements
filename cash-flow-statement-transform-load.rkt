@@ -1,11 +1,14 @@
-#lang racket
+#lang racket/base
 
-(require db)
-(require html-parsing)
-(require racket/cmdline)
-(require srfi/19) ; Time Data Types and Procedures
-(require sxml)
-(require threading)
+(require db
+         html-parsing
+         racket/cmdline
+         racket/list
+         racket/sequence
+         racket/string
+         srfi/19 ; Time Data Types and Procedures
+         sxml
+         threading)
 
 (define (cash-flow-statement-figure xexp #:section section #:date date #:entry entry)
   (let*-values ([(section-id) (case section

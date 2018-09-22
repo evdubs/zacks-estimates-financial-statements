@@ -1,11 +1,14 @@
-#lang racket
+#lang racket/base
 
-(require db)
-(require net/url)
-(require racket/cmdline)
-(require srfi/19) ; Time Data Types and Procedures
-(require tasks)
-(require threading)
+(require db
+         net/url
+         racket/cmdline
+         racket/file
+         racket/list
+         racket/port
+         srfi/19 ; Time Data Types and Procedures
+         tasks
+         threading)
 
 (define (download-income-statement symbol)
   (make-directory* (string-append "/var/tmp/zacks/income-statement/" (date->string (current-date) "~1")))
