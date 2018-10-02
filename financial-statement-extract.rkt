@@ -80,14 +80,16 @@ order by
 
 (disconnect dbc)
 
-(define delay-interval 20)
+(define delay-interval 15)
 
 (define delays (map (λ (x) (* delay-interval x)) (range 0 (length symbols))))
 
-(with-task-server (for-each (λ (l) (schedule-delayed-task (λ () (download-income-statement (first l))
-                                                            (download-balance-sheet (first l))
-                                                            (download-cash-flow-statement (first l)))
-                                                          (second l)))
+(with-task-server (for-each (λ (l) (schedule-delayed-task (λ () (download-income-statement (first l)))
+                                                          (second l))
+                              (schedule-delayed-task (λ () (download-balance-sheet (first l)))
+                                                     (+ 5 (second l)))
+                              (schedule-delayed-task (λ () (download-cash-flow-statement (first l)))
+                                                     (+ 10 (second l))))
                             (map list symbols delays))
   ; add a final task that will halt the task server
   (schedule-delayed-task (λ () (schedule-stop-task)) (* delay-interval (length delays)))
