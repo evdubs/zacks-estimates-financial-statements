@@ -26,7 +26,7 @@
               ['momentum 3]
               ['vgm 4])]
          [x (cond
-              ; Reports downloaded before 2018-04-15 used a slightly different sxpath
+              ; Reports downloaded before 2018-10-07 used a slightly different sxpath
               ; The following code might be helpful for finding these differences in the future:
               ; 
               ; (define in-file (open-input-file "/var/tmp/zacks/estimates/2017-10-26/AA.detailed-estimates.html"))
