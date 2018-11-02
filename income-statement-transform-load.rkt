@@ -12,8 +12,8 @@
 
 (define (income-statement-figure xexp #:period period #:date date #:entry entry)
   (let*-values ([(section-id period-offset) (case period
-                                ['annual (values "annual_income_statement" 1)]
-                                ['quarterly (values "quarterly_income_statement" 0)])]
+                                              ['annual (values "annual_income_statement" 1)]
+                                              ['quarterly (values "quarterly_income_statement" 0)])]
                 [(col) (case date
                          ['most-recent 2]
                          ['second-most-recent 3]
@@ -21,52 +21,37 @@
                          ['fourth-most-recent 5]
                          ['fifth-most-recent 6])]
                 [(table-id row thead-tbody th-td) (case entry
-                                           ['date (values 1 1 `thead `th)]
-                                           ['sales (values 1 1 `tbody `td)]
-                                           ['cost-of-goods (values 1 2 `tbody `td)]
-                                           ['gross-profit (values 1 3 `tbody `td)]
-                                           ['selling-administrative-depreciation-amortization-expenses (values 1 4 `tbody `td)]
-                                           ['income-after-depreciation-and-amortization (values 1 5 `tbody `td)]
-                                           ['non-operating-income (values 1 6 `tbody `td)]
-                                           ['interest-expense (values 1 7 `tbody `td)]
-                                           ['pretax-income (values 1 8 `tbody `td)]
-                                           ['income-taxes (values 1 9 `tbody `td)]
-                                           ['minority-interest (values 1 10 `tbody `td)]
-                                           ['investment-gains (values 1 11 `tbody `td)]
-                                           ['other-income (values 1 12 `tbody `td)]
-                                           ['income-from-continuing-operations (values 1 13 `tbody `td)]
-                                           ['extras-and-discontinued-operations (values 1 14 `tbody `td)]
-                                           ['net-income (values 1 15 `tbody `td)]
-                                           ['income-before-depreciation-and-amortization (values 2 1 `tbody `td)]
-                                           ['depreciation-and-amortization (values 2 2 `tbody `td)]
-                                           ['average-shares (values (+ 2 period-offset) 1 `tbody `td)]
-                                           ['diluted-eps-before-non-recurring-items (values (+ 2 period-offset) 2 `tbody `td)]
-                                           ['diluted-net-eps (values (+ 2 period-offset) 3 `tbody `td)])])
-    (~> (cond
-          ; Reports downloaded before 2018-05-08 used a slightly different sxpath
-          ; The following code might be helpful for finding these differences in the future:
-          ; 
-          ; (define in-file (open-input-file "/var/tmp/zacks/income-statement/2018-05-08/AA.income-statement.html"))
-          ; (define in-xexp (html->xexp in-file))
-          ; (webscraperhelper '(td (@ (class "alpha")) "Sales") in-xexp)
-          [(time<? (date->time-utc (folder-date)) (date->time-utc (string->date "2018-05-08" "~Y-~m-~d")))
-           ((sxpath `(html (body (@ (equal? (id "home"))))
-                           (div (@ (equal? (id "main_content"))))
-                           (div (@ (equal? (id "right_content"))))
-                           (div (@ (equal? (class "quote_body_full"))))
-                           (section (@ (equal? (id "income_statements_tabs"))))
-                           (div (@ (equal? (id ,section-id))))
-                           (table ,table-id) ,thead-tbody (tr ,row) (,th-td ,col))) xexp)]
-          [else
-           ((sxpath `(html (body (@ (equal? (id "home"))))
-                           (div 11)
-                           (section (@ (equal? (id "income_statements_tabs"))))
-                           (div (@ (equal? (id ,section-id))))
-                           (table ,table-id) ,thead-tbody (tr ,row) (,th-td ,col))) xexp)])
-        (flatten _)
-        (last _)
-        (string-trim _)
-        (string-replace _ "," ""))))
+                                                    ['date (values 1 1 `thead `th)]
+                                                    ['sales (values 1 1 `tbody `td)]
+                                                    ['cost-of-goods (values 1 2 `tbody `td)]
+                                                    ['gross-profit (values 1 3 `tbody `td)]
+                                                    ['selling-administrative-depreciation-amortization-expenses (values 1 4 `tbody `td)]
+                                                    ['income-after-depreciation-and-amortization (values 1 5 `tbody `td)]
+                                                    ['non-operating-income (values 1 6 `tbody `td)]
+                                                    ['interest-expense (values 1 7 `tbody `td)]
+                                                    ['pretax-income (values 1 8 `tbody `td)]
+                                                    ['income-taxes (values 1 9 `tbody `td)]
+                                                    ['minority-interest (values 1 10 `tbody `td)]
+                                                    ['investment-gains (values 1 11 `tbody `td)]
+                                                    ['other-income (values 1 12 `tbody `td)]
+                                                    ['income-from-continuing-operations (values 1 13 `tbody `td)]
+                                                    ['extras-and-discontinued-operations (values 1 14 `tbody `td)]
+                                                    ['net-income (values 1 15 `tbody `td)]
+                                                    ['income-before-depreciation-and-amortization (values 2 1 `tbody `td)]
+                                                    ['depreciation-and-amortization (values 2 2 `tbody `td)]
+                                                    ['average-shares (values (+ 2 period-offset) 1 `tbody `td)]
+                                                    ['diluted-eps-before-non-recurring-items (values (+ 2 period-offset) 2 `tbody `td)]
+                                                    ['diluted-net-eps (values (+ 2 period-offset) 3 `tbody `td)])])
+    (~>
+     ; (define in-file (open-input-file "/var/tmp/zacks/income-statement/2018-05-08/AA.income-statement.html"))
+     ; (define in-xexp (html->xexp in-file))
+     ; (webscraperhelper '(td (@ (class "alpha")) "Sales") in-xexp)
+     ((sxpath `(// (div (@ (equal? (id ,section-id))))
+                   (table ,table-id) ,thead-tbody (tr ,row) (,th-td ,col))) xexp)
+     (flatten _)
+     (last _)
+     (string-trim _)
+     (string-replace _ "," ""))))
 
 (define base-folder (make-parameter "/var/tmp/zacks/income-statement"))
 

@@ -65,31 +65,16 @@
                                            ['total-liabilities-and-equity (values 8 `tbody `td)]
                                            ['shares-outstanding (values 10 `tbody `td)]
                                            ['book-value-per-share (values 11 `tbody `td)])])
-    (~> (cond
-          ; Reports downloaded before 2018-05-08 used a slightly different sxpath
-          ; The following code might be helpful for finding these differences in the future:
-          ; 
-          ; (define in-file (open-input-file "/var/tmp/zacks/balance-sheet/2018-05-08/AA.balance-sheet.html"))
-          ; (define in-xexp (html->xexp in-file))
-          ; (webscraperhelper '(td (@ (class "alpha")) "Preferred Stock") in-xexp)
-          [(time<? (date->time-utc (folder-date)) (date->time-utc (string->date "2018-05-08" "~Y-~m-~d")))
-           ((sxpath `(html (body (@ (equal? (id "home"))))
-                           (div (@ (equal? (id "main_content"))))
-                           (div (@ (equal? (id "right_content"))))
-                           (div (@ (equal? (class "quote_body_full"))))
-                           (section (@ (equal? (id "income_statements_tabs"))))
-                           (div (@ (equal? (id ,section-id))))
-                           (table ,table-id) ,thead-tbody (tr ,row) (,th-td ,col))) xexp)]
-          [else
-           ((sxpath `(html (body (@ (equal? (id "home"))))
-                           (div 11)
-                           (section (@ (equal? (id "income_statements_tabs"))))
-                           (div (@ (equal? (id ,section-id))))
-                           (table ,table-id) ,thead-tbody (tr ,row) (,th-td ,col))) xexp)])
-        (flatten _)
-        (last _)
-        (string-trim _)
-        (string-replace _ "," ""))))
+    (~>
+     ; (define in-file (open-input-file "/var/tmp/zacks/balance-sheet/2018-05-08/AA.balance-sheet.html"))
+     ; (define in-xexp (html->xexp in-file))
+     ; (webscraperhelper '(td (@ (class "alpha")) "Preferred Stock") in-xexp)
+     ((sxpath `(// (div (@ (equal? (id ,section-id))))
+                   (table ,table-id) ,thead-tbody (tr ,row) (,th-td ,col))) xexp)
+     (flatten _)
+     (last _)
+     (string-trim _)
+     (string-replace _ "," ""))))
 
 (define base-folder (make-parameter "/var/tmp/zacks/balance-sheet"))
 

@@ -44,29 +44,16 @@
                                            ['cash-at-beginning-of-period (values 9 `tbody `td)]
                                            ['cash-at-end-of-period (values 10 `tbody `td)]
                                            ['diluted-net-eps (values 11 `tbody `td)])])
-    (~> (cond
-          ; Reports downloaded before 2018-05-08 used a slightly different sxpath
-          ; The following code might be helpful for finding these differences in the future:
-          ; 
-          ; (define in-file (open-input-file "/var/tmp/zacks/cash-flow-statement/2018-05-08/AA.cash-flow-statement.html"))
-          ; (define in-xexp (html->xexp in-file))
-          ; (webscraperhelper '(td (@ (class "alpha")) "Investments") in-xexp)
-          [(time<? (date->time-utc (folder-date)) (date->time-utc (string->date "2018-05-08" "~Y-~m-~d")))
-           ((sxpath `(html (body (@ (equal? (id "home"))))
-                           (div (@ (equal? (id "main_content"))))
-                           (div (@ (equal? (id "right_content"))))
-                           (div (@ (equal? (class "quote_body_full"))))
-                           (section (@ (equal? (id ,section-id))))
-                           table ,thead-tbody (tr ,row) (,th-td ,col))) xexp)]
-          [else
-           ((sxpath `(html (body (@ (equal? (id "home"))))
-                           (div 11)
-                           (section (@ (equal? (id ,section-id))))
-                           table ,thead-tbody (tr ,row) (,th-td ,col))) xexp)])
-        (flatten _)
-        (last _)
-        (string-trim _)
-        (string-replace _ "," ""))))
+    (~>
+     ; (define in-file (open-input-file "/var/tmp/zacks/cash-flow-statement/2018-05-08/AA.cash-flow-statement.html"))
+     ; (define in-xexp (html->xexp in-file))
+     ; (webscraperhelper '(td (@ (class "alpha")) "Investments") in-xexp)
+     ((sxpath `(// (section (@ (equal? (id ,section-id))))
+                   table ,thead-tbody (tr ,row) (,th-td ,col))) xexp)
+     (flatten _)
+     (last _)
+     (string-trim _)
+     (string-replace _ "," ""))))
 
 (define base-folder (make-parameter "/var/tmp/zacks/cash-flow-statement"))
 
