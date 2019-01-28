@@ -14,9 +14,9 @@
   (make-directory* (string-append "/var/tmp/zacks/estimates/" (date->string (current-date) "~1")))
   (call-with-output-file (string-append "/var/tmp/zacks/estimates/" (date->string (current-date) "~1") "/" symbol ".detailed-estimates.html")
     (λ (out) (with-handlers ([exn:fail:network
-                              (λ (e)
+                              (λ (errno error)
                                 (displayln (string-append "Encountered network error for " symbol))
-                                (displayln ((error-value->string-handler) e 1000)))])
+                                (displayln ((error-value->string-handler) error 1000)))])
                (~> (string-append "https://www.zacks.com/stock/quote/" symbol "/detailed-estimates")
                    (string->url _)
                    (get-pure-port _)
