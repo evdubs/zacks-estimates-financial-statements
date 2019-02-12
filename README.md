@@ -22,3 +22,11 @@ file information. This data is provided by the [nasdaq-symbols](https://github.c
 The above process will download around 2GB worth of HTML documents over many hours. It is encouraged to compress these files when you are 
 done processing them. It is also encouraged that you do not run the extract jobs too frequently. I think running the estimate-extract 
 once per week and the financial-statement-extract once per month is sufficient.
+
+## dat
+
+Historical EPS and Sales estimates can be retrieved in CSV form from [dat](https://github.com/datproject/dat) with the following URL:
+
+`dat://6a797780a33db5b65fe08e5ba5a8dcf0277ba9d508d064efda08458db1e1a3da`
+
+You may also view this link on [datbase](https://datbase.org/view?query=dat://6a797780a33db5b65fe08e5ba5a8dcf0277ba9d508d064efda08458db1e1a3da).
