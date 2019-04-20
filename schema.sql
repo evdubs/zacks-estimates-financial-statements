@@ -12,7 +12,7 @@ CREATE TYPE zacks.statement_period AS ENUM
 
 CREATE TABLE zacks.balance_sheet_assets
 (
-    act_symbol text COLLATE pg_catalog."default" NOT NULL,
+    act_symbol text NOT NULL,
     date date NOT NULL,
     period zacks.statement_period NOT NULL,
     cash_and_equivalents numeric,
@@ -37,7 +37,7 @@ CREATE TABLE zacks.balance_sheet_assets
 
 CREATE TABLE zacks.balance_sheet_equity
 (
-    act_symbol text COLLATE pg_catalog."default" NOT NULL,
+    act_symbol text NOT NULL,
     date date NOT NULL,
     period zacks.statement_period NOT NULL,
     preferred_stock numeric,
@@ -59,7 +59,7 @@ CREATE TABLE zacks.balance_sheet_equity
 
 CREATE TABLE zacks.balance_sheet_liabilities
 (
-    act_symbol text COLLATE pg_catalog."default" NOT NULL,
+    act_symbol text NOT NULL,
     date date NOT NULL,
     period zacks.statement_period NOT NULL,
     notes_payable numeric,
@@ -87,7 +87,7 @@ CREATE TABLE zacks.balance_sheet_liabilities
 
 CREATE TABLE zacks.cash_flow_statement
 (
-    act_symbol text COLLATE pg_catalog."default" NOT NULL,
+    act_symbol text NOT NULL,
     date date NOT NULL,
     period zacks.statement_period NOT NULL,
     net_income numeric,
@@ -121,7 +121,7 @@ CREATE TABLE zacks.cash_flow_statement
 
 CREATE TABLE zacks.eps_estimate
 (
-    act_symbol text COLLATE pg_catalog."default" NOT NULL,
+    act_symbol text NOT NULL,
     date date NOT NULL,
     period zacks.estimate_period NOT NULL,
     period_end_date date NOT NULL,
@@ -140,7 +140,7 @@ CREATE TABLE zacks.eps_estimate
 
 CREATE TABLE zacks.eps_history
 (
-    act_symbol text COLLATE pg_catalog."default" NOT NULL,
+    act_symbol text NOT NULL,
     date date NOT NULL,
     period_end_date date NOT NULL,
     reported numeric,
@@ -154,7 +154,7 @@ CREATE TABLE zacks.eps_history
 
 CREATE TABLE zacks.eps_perception
 (
-    act_symbol text COLLATE pg_catalog."default" NOT NULL,
+    act_symbol text NOT NULL,
     date date NOT NULL,
     period zacks.estimate_period NOT NULL,
     period_end_date date NOT NULL,
@@ -168,7 +168,7 @@ CREATE TABLE zacks.eps_perception
 
 CREATE TABLE zacks.eps_revision
 (
-    act_symbol text COLLATE pg_catalog."default" NOT NULL,
+    act_symbol text NOT NULL,
     date date NOT NULL,
     period zacks.estimate_period NOT NULL,
     period_end_date date NOT NULL,
@@ -187,7 +187,7 @@ CREATE TABLE zacks.eps_revision
 
 CREATE TABLE zacks.income_statement
 (
-    act_symbol text COLLATE pg_catalog."default" NOT NULL,
+    act_symbol text NOT NULL,
     date date NOT NULL,
     period zacks.statement_period NOT NULL,
     sales numeric,
@@ -219,7 +219,7 @@ CREATE TABLE zacks.income_statement
 
 CREATE TABLE zacks.rank_score
 (
-    act_symbol text COLLATE pg_catalog."default" NOT NULL,
+    act_symbol text NOT NULL,
     date date NOT NULL,
     rank zacks.rank NOT NULL,
     value zacks.score NOT NULL,
@@ -235,7 +235,7 @@ CREATE TABLE zacks.rank_score
 
 CREATE TABLE zacks.sales_estimate
 (
-    act_symbol text COLLATE pg_catalog."default" NOT NULL,
+    act_symbol text NOT NULL,
     date date NOT NULL,
     period zacks.estimate_period NOT NULL,
     period_end_date date NOT NULL,
