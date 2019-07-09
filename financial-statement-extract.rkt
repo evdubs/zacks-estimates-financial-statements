@@ -43,9 +43,19 @@
 
 (define db-pass (make-parameter ""))
 
+(define first-symbol (make-parameter ""))
+
+(define last-symbol (make-parameter ""))
+
 (command-line
  #:program "racket financial-statement-extract.rkt"
  #:once-each
+ [("-f" "--first-symbol") first
+                          "First symbol to query. Defaults to nothing"
+                          (first-symbol first)]
+ [("-l" "--last-symbol") last
+                         "Last symbol to query. Defaults to nothing"
+                         (last-symbol last)]
  [("-n" "--db-name") name
                      "Database name. Defaults to 'local'"
                      (db-name name)]
@@ -73,10 +83,20 @@ where
     then security_name !~ '(Note|Preferred|Right|Unit|Warrant)'
     else true
   end and
-  last_seen = (select max(last_seen) from nasdaq.symbol)
+  last_seen = (select max(last_seen) from nasdaq.symbol) and
+  case when $1 != ''
+    then act_symbol >= $1
+    else true
+  end and
+  case when $2 != ''
+    then act_symbol <= $2
+    else true
+  end
 order by
   act_symbol;
-"))
+"
+                            (first-symbol)
+                            (last-symbol)))
 
 (disconnect dbc)
 
