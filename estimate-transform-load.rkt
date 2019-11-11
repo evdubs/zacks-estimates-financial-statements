@@ -1,12 +1,12 @@
 #lang racket/base
 
 (require db
+         gregor
          html-parsing
          racket/cmdline
          racket/list
          racket/sequence
          racket/string
-         srfi/19 ; Time Data Types and Procedures
          sxml
          threading)
 
@@ -32,7 +32,7 @@
               ; (define in-file (open-input-file "/var/tmp/zacks/estimates/2017-10-26/AA.detailed-estimates.html"))
               ; (define in-xexp (html->xexp in-file))
               ; (webscraperhelper '(td (@ (class "alpha")) "Down Last 60 Days") in-xexp)
-              [(time<? (date->time-utc (folder-date)) (date->time-utc (string->date "2018-10-07" "~Y-~m-~d")))
+              [(date<? (folder-date) (date 2018 10 7))
                ((sxpath `(html (body (@ (equal? (id "home"))))
                                (div (@ (equal? (id "main_content"))))
                                (div (@ (equal? (id "right_content"))))
@@ -95,7 +95,7 @@
 
 (define base-folder (make-parameter "/var/tmp/zacks/estimates"))
 
-(define folder-date (make-parameter (current-date)))
+(define folder-date (make-parameter (today)))
 
 (define db-user (make-parameter "user"))
 
@@ -111,7 +111,7 @@
                          (base-folder folder)]
  [("-d" "--folder-date") date
                          "Zacks estimates folder date. Defaults to today"
-                         (folder-date (string->date date "~Y-~m-~d"))]
+                         (folder-date (iso8601->date date))]
  [("-n" "--db-name") name
                      "Database name. Defaults to 'local'"
                      (db-name name)]
@@ -128,16 +128,16 @@
 (define insert-success-counter 0)
 (define insert-failure-counter 0)
 
-(parameterize ([current-directory (string-append (base-folder) "/" (date->string (folder-date) "~1") "/")])
+(parameterize ([current-directory (string-append (base-folder) "/" (~t (folder-date) "yyyy-MM-dd") "/")])
   (for ([p (sequence-filter (λ (p) (string-contains? (path->string p) ".detailed-estimates.html")) (in-directory))])
-    (let ([file-name (string-append (base-folder) "/" (date->string (folder-date) "~1") "/" (path->string p))]
+    (let ([file-name (string-append (base-folder) "/" (~t (folder-date) "yyyy-MM-dd") "/" (path->string p))]
           [ticker-symbol (string-replace (path->string p) ".detailed-estimates.html" "")])
       (call-with-input-file file-name
         (λ (in) (let ([xexp (html->xexp in)])
                   (with-handlers ([exn:fail? (λ (e) (displayln (string-append "Failed to process "
                                                                               ticker-symbol
                                                                               " for date "
-                                                                              (date->string (folder-date) "~1")))
+                                                                              (~t (folder-date) "yyyy-MM-dd")))
                                                (displayln ((error-value->string-handler) e 1000))
                                                (rollback-transaction dbc)
                                                (set! insert-failure-counter (add1 insert-failure-counter)))])
@@ -164,7 +164,7 @@ insert into zacks.rank_score
 ) on conflict (act_symbol, date) do nothing;
 "
                                 ticker-symbol
-                                (date->string (folder-date) "~1")
+                                (~t (folder-date) "yyyy-MM-dd")
                                 (rank xexp)
                                 (style-score xexp #:style 'value)
                                 (style-score xexp #:style 'growth)
@@ -216,7 +216,7 @@ insert into zacks.sales_estimate
 ) on conflict (act_symbol, date, period) do nothing;
 "
                                             ticker-symbol
-                                            (date->string (folder-date) "~1")
+                                            (~t (folder-date) "yyyy-MM-dd")
                                             (symbol->string period)
                                             ; Use eps-estimates date as we sometimes have worse coverage with sales estimates than eps estimates
                                             (string-append "01/" (estimate-figure xexp #:section 'eps-estimates #:period period #:entry 'date))
@@ -275,7 +275,7 @@ insert into zacks.eps_estimate
 ) on conflict (act_symbol, date, period) do nothing;
 "
                                             ticker-symbol
-                                            (date->string (folder-date) "~1")
+                                            (~t (folder-date) "yyyy-MM-dd")
                                             (symbol->string period)
                                             (string-append "01/" (estimate-figure xexp #:section 'eps-estimates #:period period #:entry 'date))
                                             (estimate-figure xexp #:section 'eps-estimates #:period period #:entry 'consensus)
@@ -334,7 +334,7 @@ insert into zacks.eps_revision
 ) on conflict (act_symbol, date, period) do nothing;
 "
                                             ticker-symbol
-                                            (date->string (folder-date) "~1")
+                                            (~t (folder-date) "yyyy-MM-dd")
                                             (symbol->string period)
                                             (string-append "01/" (estimate-figure xexp #:section 'eps-revisions #:period period #:entry 'date))
                                             (estimate-figure xexp #:section 'eps-revisions #:period period #:entry 'up-7)
@@ -368,7 +368,7 @@ insert into zacks.eps_perception
 ) on conflict (act_symbol, date, period) do nothing;
 "
                                             ticker-symbol
-                                            (date->string (folder-date) "~1")
+                                            (~t (folder-date) "yyyy-MM-dd")
                                             (symbol->string period)
                                             (string-append "01/" (estimate-figure xexp #:section 'eps-upside #:period period #:entry 'date))
                                             (estimate-figure xexp #:section 'eps-upside #:period period #:entry 'most-accurate)))
@@ -397,7 +397,7 @@ insert into zacks.eps_history
 ) on conflict (act_symbol, date, period_end_date) do nothing;
 "
                                             ticker-symbol
-                                            (date->string (folder-date) "~1")
+                                            (~t (folder-date) "yyyy-MM-dd")
                                             (string-append "01/" (estimate-figure xexp #:section 'eps-surprise #:period quarter #:entry 'date))
                                             (estimate-figure xexp #:section 'eps-surprise #:period quarter #:entry 'reported)
                                             (estimate-figure xexp #:section 'eps-surprise #:period quarter #:entry 'estimate)))

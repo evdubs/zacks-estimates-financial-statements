@@ -1,18 +1,18 @@
 #lang racket/base
 
 (require db
+         gregor
          net/url
          racket/cmdline
          racket/file
          racket/list
          racket/port
-         srfi/19 ; Time Data Types and Procedures
          tasks
          threading)
 
 (define (download-estimates symbol)
-  (make-directory* (string-append "/var/tmp/zacks/estimates/" (date->string (current-date) "~1")))
-  (call-with-output-file (string-append "/var/tmp/zacks/estimates/" (date->string (current-date) "~1") "/" symbol ".detailed-estimates.html")
+  (make-directory* (string-append "/var/tmp/zacks/estimates/" (~t (today) "yyyy-MM-dd")))
+  (call-with-output-file (string-append "/var/tmp/zacks/estimates/" (~t (today) "yyyy-MM-dd") "/" symbol ".detailed-estimates.html")
     (λ (out) (with-handlers ([exn:fail?
                               (λ (error)
                                 (displayln (string-append "Encountered error for " symbol))
