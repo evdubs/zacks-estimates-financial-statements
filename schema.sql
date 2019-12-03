@@ -250,3 +250,19 @@ CREATE TABLE zacks.sales_estimate
         ON UPDATE NO ACTION
         ON DELETE NO ACTION
 );
+
+CREATE OR REPLACE FUNCTION zacks.to_integer_rank(
+	rank zacks.rank)
+    RETURNS integer
+    LANGUAGE 'sql'
+AS $BODY$
+select
+  case "rank"::text
+    when 'Strong Buy' then 1
+    when 'Buy' then 2
+    when 'Hold' then 3
+    when 'Sell' then 4
+    when 'Strong Sell' then 5
+  end;
+$BODY$;
+
