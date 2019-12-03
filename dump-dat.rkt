@@ -1,13 +1,13 @@
 #lang racket/base
 
 (require db
+         gregor
          racket/cmdline
-         racket/vector
-         srfi/19) ; Time Data Types and Procedures
+         racket/vector)
 
-(define start-date (make-parameter (date->string (current-date) "~1")))
+(define start-date (make-parameter (~t (today) "yyyy-MM-dd")))
 
-(define end-date (make-parameter (date->string (current-date) "~1")))
+(define end-date (make-parameter (~t (today) "yyyy-MM-dd")))
 
 (define db-user (make-parameter "user"))
 

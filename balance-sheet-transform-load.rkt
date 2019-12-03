@@ -1,12 +1,12 @@
 #lang racket/base
 
 (require db
+         gregor
          html-parsing
          racket/cmdline
          racket/list
          racket/sequence
          racket/string
-         srfi/19 ; Time Data Types and Procedures
          sxml
          threading)
 
@@ -78,7 +78,7 @@
 
 (define base-folder (make-parameter "/var/tmp/zacks/balance-sheet"))
 
-(define folder-date (make-parameter (current-date)))
+(define folder-date (make-parameter (today)))
 
 (define db-user (make-parameter "user"))
 
@@ -94,7 +94,7 @@
                          (base-folder folder)]
  [("-d" "--folder-date") date
                          "Zacks balance sheet folder date. Defaults to today"
-                         (folder-date (string->date date "~Y-~m-~d"))]
+                         (folder-date (iso8601->date date))]
  [("-n" "--db-name") name
                      "Database name. Defaults to 'local'"
                      (db-name name)]
@@ -111,9 +111,9 @@
 (define insert-success-counter 0)
 (define insert-failure-counter 0)
 
-(parameterize ([current-directory (string-append (base-folder) "/" (date->string (folder-date) "~1") "/")])
+(parameterize ([current-directory (string-append (base-folder) "/" (~t (folder-date) "yyyy-MM-dd") "/")])
   (for ([p (sequence-filter (λ (p) (string-contains? (path->string p) ".balance-sheet.html")) (in-directory))])
-    (let ([file-name (string-append (base-folder) "/" (date->string (folder-date) "~1") "/" (path->string p))]
+    (let ([file-name (string-append (base-folder) "/" (~t (folder-date) "yyyy-MM-dd") "/" (path->string p))]
           [ticker-symbol (string-replace (path->string p) ".balance-sheet.html" "")])
       (call-with-input-file file-name
         (λ (in) (let ([xexp (html->xexp in)])
@@ -121,7 +121,7 @@
                               (with-handlers ([exn:fail? (λ (e) (displayln (string-append "Failed to process "
                                                                                           ticker-symbol
                                                                                           " for date "
-                                                                                          (date->string (folder-date) "~1")))
+                                                                                          (~t (folder-date) "yyyy-MM-dd")))
                                                            (displayln ((error-value->string-handler) e 1000))
                                                            (rollback-transaction dbc)
                                                            (set! insert-failure-counter (add1 insert-failure-counter)))])

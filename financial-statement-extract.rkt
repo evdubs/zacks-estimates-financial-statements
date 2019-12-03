@@ -1,18 +1,18 @@
 #lang racket/base
 
 (require db
+         gregor
          net/url
          racket/cmdline
          racket/file
          racket/list
          racket/port
-         srfi/19 ; Time Data Types and Procedures
          tasks
          threading)
 
 (define (download-income-statement symbol)
-  (make-directory* (string-append "/var/tmp/zacks/income-statement/" (date->string (current-date) "~1")))
-  (call-with-output-file (string-append "/var/tmp/zacks/income-statement/" (date->string (current-date) "~1") "/" symbol ".income-statement.html")
+  (make-directory* (string-append "/var/tmp/zacks/income-statement/" (~t (today) "yyyy-MM-dd")))
+  (call-with-output-file (string-append "/var/tmp/zacks/income-statement/" (~t (today) "yyyy-MM-dd") "/" symbol ".income-statement.html")
     (λ (out) (with-handlers ([exn:fail?
                               (λ (error)
                                 (displayln (string-append "Encountered error for " symbol))
@@ -24,8 +24,8 @@
     #:exists 'replace))
 
 (define (download-balance-sheet symbol)
-  (make-directory* (string-append "/var/tmp/zacks/balance-sheet/" (date->string (current-date) "~1")))
-  (call-with-output-file (string-append "/var/tmp/zacks/balance-sheet/" (date->string (current-date) "~1") "/" symbol ".balance-sheet.html")
+  (make-directory* (string-append "/var/tmp/zacks/balance-sheet/" (~t (today) "yyyy-MM-dd")))
+  (call-with-output-file (string-append "/var/tmp/zacks/balance-sheet/" (~t (today) "yyyy-MM-dd") "/" symbol ".balance-sheet.html")
     (λ (out) (with-handlers ([exn:fail?
                               (λ (error)
                                 (displayln (string-append "Encountered error for " symbol))
@@ -37,8 +37,8 @@
     #:exists 'replace))
 
 (define (download-cash-flow-statement symbol)
-  (make-directory* (string-append "/var/tmp/zacks/cash-flow-statement/" (date->string (current-date) "~1")))
-  (call-with-output-file (string-append "/var/tmp/zacks/cash-flow-statement/" (date->string (current-date) "~1") "/" symbol ".cash-flow-statement.html")
+  (make-directory* (string-append "/var/tmp/zacks/cash-flow-statement/" (~t (today) "yyyy-MM-dd")))
+  (call-with-output-file (string-append "/var/tmp/zacks/cash-flow-statement/" (~t (today) "yyyy-MM-dd") "/" symbol ".cash-flow-statement.html")
     (λ (out) (with-handlers ([exn:fail?
                               (λ (error)
                                 (displayln (string-append "Encountered error for " symbol))
