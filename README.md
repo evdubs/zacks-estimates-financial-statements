@@ -23,6 +23,14 @@ The above process will download around 2GB worth of HTML documents over many hou
 done processing them. It is also encouraged that you do not run the extract jobs too frequently. I think running the estimate-extract 
 once per week and the financial-statement-extract once per month is sufficient.
 
+### Dependencies
+
+It is recommended that you start with the standard Racket distribution. With that, you will need to install the following packages:
+
+```bash
+$ raco pkg install --skip-installed gregor html-parsing sxml tasks threading
+```
+
 ## dat
 
 Historical EPS and Sales estimates can be retrieved in CSV form from [dat](https://github.com/datproject/dat) with the following URL:
