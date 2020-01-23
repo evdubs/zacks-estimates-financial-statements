@@ -10,6 +10,9 @@ CREATE TYPE zacks.score AS ENUM
 CREATE TYPE zacks.statement_period AS ENUM
     ('Year', 'Quarter');
 
+CREATE TYPE zacks."when" AS ENUM
+    ('Before market open', 'After market close');
+
 CREATE TABLE zacks.balance_sheet_assets
 (
     act_symbol text NOT NULL,
@@ -250,6 +253,17 @@ CREATE TABLE zacks.sales_estimate
         ON UPDATE NO ACTION
         ON DELETE NO ACTION
 );
+
+CREATE TABLE zacks.earnings_calendar
+(
+    act_symbol text NOT NULL,
+    date date NOT NULL,
+    "when" zacks."when",
+    CONSTRAINT earnings_calendar_act_symbol_fkey FOREIGN KEY (act_symbol)
+        REFERENCES nasdaq.symbol (act_symbol) MATCH SIMPLE
+        ON UPDATE NO ACTION
+        ON DELETE NO ACTION
+)
 
 CREATE OR REPLACE FUNCTION zacks.to_integer_rank(
 	rank zacks.rank)
