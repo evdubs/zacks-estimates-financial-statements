@@ -15,6 +15,11 @@ $ racket cash-flow-statement-transform-load.rkt
 $ racket income-statement-transform-load.rkt
 ```
 
+```bash
+$ racket earnings-calendar-extract.rkt
+$ racket earnings-calendar-transform-load.rkt
+```
+
 The provided schema.sql file shows the expected schema within the target PostgreSQL instance. 
 This process assumes you can write to a /var/tmp/zacks folder. This process also assumes you have loaded your database with NASDAQ symbol
 file information. This data is provided by the [nasdaq-symbols](https://github.com/evdubs/nasdaq-symbols) project.
