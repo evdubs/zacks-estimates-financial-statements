@@ -1,3 +1,5 @@
+CREATE SCHEMA zacks;
+
 CREATE TYPE zacks.estimate_period AS ENUM
     ('Current Quarter', 'Next Quarter', 'Current Year', 'Next Year');
 	

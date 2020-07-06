@@ -38,12 +38,19 @@
                                (div (@ (equal? (id "right_content"))))
                                (section (@ (equal? (id "quote_ribbon_v2"))))
                                (div 2) (div 2) p (span ,n))) xexp)]
+              [(date<? (folder-date) (date 2020 7 4))
+               ((sxpath `(html (body (@ (equal? (id "home"))))
+                               (div (@ (equal? (id "main_content"))))
+                               (div (@ (equal? (id "right_content"))))
+                               (section (@ (equal? (id "quote_ribbon_v2"))))
+                               (div 2) (div 3) p (span ,n))) xexp)]
+              ; Pipes between the style scores now show up as their own span element, so we have a hack to skip them
               [else
                ((sxpath `(html (body (@ (equal? (id "home"))))
                                (div (@ (equal? (id "main_content"))))
                                (div (@ (equal? (id "right_content"))))
                                (section (@ (equal? (id "quote_ribbon_v2"))))
-                               (div 2) (div 3) p (span ,n))) xexp)])])
+                               (div 2) (div 3) p (span ,(- (* n 2) 1)))) xexp)])])
     (third (first x))))
 
 (define (estimate-figure xexp #:section section #:period period #:entry entry)
