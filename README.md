@@ -35,11 +35,3 @@ It is recommended that you start with the standard Racket distribution. With tha
 ```bash
 $ raco pkg install --skip-installed gregor html-parsing sxml tasks threading
 ```
-
-## dat
-
-Historical EPS and Sales estimates can be retrieved in CSV form from [dat](https://github.com/datproject/dat) with the following URL:
-
-`dat://6a797780a33db5b65fe08e5ba5a8dcf0277ba9d508d064efda08458db1e1a3da`
-
-You may also view this link on [datbase](https://datbase.org/view?query=dat://6a797780a33db5b65fe08e5ba5a8dcf0277ba9d508d064efda08458db1e1a3da).
