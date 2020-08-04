@@ -51,9 +51,9 @@ where
             (~t (folder-date) "yyyy-MM-dd"))
 
 (parameterize ([current-directory (string-append (base-folder) "/" (~t (folder-date) "yyyy-MM-dd") "/")])
-  (for ([p (sequence-filter (λ (p) (string-contains? (path->string p) ".json")) (in-directory))])
-    (let ([file-name (string-append (base-folder) "/" (~t (folder-date) "yyyy-MM-dd") "/" (path->string p))]
-          [date-of-earnings (string-replace (path->string p) ".json" "")])
+  (for ([p (sequence-filter (λ (p) (string-contains? (path->string p) ".json")) (in-directory (current-directory)))])
+    (let* ([file-name (path->string p)]
+           [date-of-earnings (string-replace (string-replace file-name (path->string (current-directory)) "") ".json" "")])
       (call-with-input-file file-name
         (λ (in)
           (with-handlers ([exn:fail? (λ (e) (displayln (string-append "Failed to parse "

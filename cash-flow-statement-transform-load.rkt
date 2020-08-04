@@ -91,9 +91,9 @@
 (define insert-failure-counter 0)
 
 (parameterize ([current-directory (string-append (base-folder) "/" (~t (folder-date) "yyyy-MM-dd") "/")])
-  (for ([p (sequence-filter (λ (p) (string-contains? (path->string p) ".cash-flow-statement.html")) (in-directory))])
-    (let ([file-name (string-append (base-folder) "/" (~t (folder-date) "yyyy-MM-dd") "/" (path->string p))]
-          [ticker-symbol (string-replace (path->string p) ".cash-flow-statement.html" "")])
+  (for ([p (sequence-filter (λ (p) (string-contains? (path->string p) ".cash-flow-statement.html")) (in-directory (current-directory)))])
+    (let* ([file-name (path->string p)]
+           [ticker-symbol (string-replace (string-replace file-name (path->string (current-directory)) "") ".cash-flow-statement.html" "")])
       (call-with-input-file file-name
         (λ (in) (let ([xexp (html->xexp in)])
                   (for-each (λ (date)
