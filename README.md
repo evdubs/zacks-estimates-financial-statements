@@ -20,7 +20,7 @@ $ racket earnings-calendar-extract.rkt
 $ racket earnings-calendar-transform-load.rkt
 ```
 
-You will need to provide a password for many of the above programs. The available parameters are:
+You will need to provide a database password for many of the above programs. The available parameters are:
 
 ```bash
 $ racket estimate-extract.rkt -h
