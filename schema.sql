@@ -281,4 +281,3 @@ select
     when 'Strong Sell' then 5
   end;
 $BODY$;
-
