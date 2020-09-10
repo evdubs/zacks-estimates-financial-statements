@@ -136,7 +136,7 @@ CREATE TABLE zacks.eps_estimate
     high numeric,
     low numeric,
     year_ago numeric,
-    CONSTRAINT eps_estimate_pkey PRIMARY KEY (act_symbol, date, period),
+    CONSTRAINT eps_estimate_pkey PRIMARY KEY (date, act_symbol, period),
     CONSTRAINT eps_estimate_act_symbol_fkey FOREIGN KEY (act_symbol)
         REFERENCES nasdaq.symbol (act_symbol) MATCH SIMPLE
         ON UPDATE NO ACTION
@@ -150,7 +150,7 @@ CREATE TABLE zacks.eps_history
     period_end_date date NOT NULL,
     reported numeric,
     estimate numeric,
-    CONSTRAINT eps_history_pkey PRIMARY KEY (act_symbol, date, period_end_date),
+    CONSTRAINT eps_history_pkey PRIMARY KEY (date, act_symbol, period_end_date),
     CONSTRAINT eps_history_act_symbol_fkey FOREIGN KEY (act_symbol)
         REFERENCES nasdaq.symbol (act_symbol) MATCH SIMPLE
         ON UPDATE NO ACTION
@@ -164,7 +164,7 @@ CREATE TABLE zacks.eps_perception
     period zacks.estimate_period NOT NULL,
     period_end_date date NOT NULL,
     most_accurate numeric,
-    CONSTRAINT eps_perception_pkey PRIMARY KEY (act_symbol, date, period),
+    CONSTRAINT eps_perception_pkey PRIMARY KEY (date, act_symbol, period),
     CONSTRAINT eps_perception_act_symbol_fkey FOREIGN KEY (act_symbol)
         REFERENCES nasdaq.symbol (act_symbol) MATCH SIMPLE
         ON UPDATE NO ACTION
@@ -183,7 +183,7 @@ CREATE TABLE zacks.eps_revision
     down_7 smallint,
     down_30 smallint,
     down_60 smallint,
-    CONSTRAINT eps_revision_pkey PRIMARY KEY (act_symbol, date, period),
+    CONSTRAINT eps_revision_pkey PRIMARY KEY (date, act_symbol, period),
     CONSTRAINT eps_revision_act_symbol_fkey FOREIGN KEY (act_symbol)
         REFERENCES nasdaq.symbol (act_symbol) MATCH SIMPLE
         ON UPDATE NO ACTION
@@ -231,7 +231,7 @@ CREATE TABLE zacks.rank_score
     growth zacks.score NOT NULL,
     momentum zacks.score NOT NULL,
     vgm zacks.score NOT NULL,
-    CONSTRAINT rank_score_pkey PRIMARY KEY (act_symbol, date),
+    CONSTRAINT rank_score_pkey PRIMARY KEY (date, act_symbol),
     CONSTRAINT rank_score_act_symbol_fkey FOREIGN KEY (act_symbol)
         REFERENCES nasdaq.symbol (act_symbol) MATCH SIMPLE
         ON UPDATE NO ACTION
@@ -249,7 +249,7 @@ CREATE TABLE zacks.sales_estimate
     high numeric,
     low numeric,
     year_ago numeric,
-    CONSTRAINT sales_estimate_pkey PRIMARY KEY (act_symbol, date, period),
+    CONSTRAINT sales_estimate_pkey PRIMARY KEY (date, act_symbol, period),
     CONSTRAINT sales_estimate_act_symbol_fkey FOREIGN KEY (act_symbol)
         REFERENCES nasdaq.symbol (act_symbol) MATCH SIMPLE
         ON UPDATE NO ACTION
