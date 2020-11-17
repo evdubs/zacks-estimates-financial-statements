@@ -265,7 +265,7 @@ CREATE TABLE zacks.earnings_calendar
         REFERENCES nasdaq.symbol (act_symbol) MATCH SIMPLE
         ON UPDATE NO ACTION
         ON DELETE NO ACTION
-)
+);
 
 CREATE OR REPLACE FUNCTION zacks.to_integer_rank(
 	rank zacks.rank)
