@@ -63,6 +63,7 @@ where
                                        (displayln ((error-value->string-handler) e 1000)))])
             (~> (port->string in)
                 (regexp-replace* #rx"<.*?>" _ "")
+                (regexp-replace* #rx"[A-Z\\.]+ Quick Quote" _ "")
                 (string->jsexpr _)
                 (hash-ref _ 'data)
                 (for-each (λ (ticker-when-list)
