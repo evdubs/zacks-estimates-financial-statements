@@ -3,7 +3,7 @@
 (require gregor
          gregor/period
          gregor/time
-         net/url
+         net/http-easy
          racket/cmdline
          racket/file
          racket/list
@@ -16,12 +16,16 @@
   (call-with-output-file (string-append "/var/tmp/zacks/earnings-calendar/" (~t (today) "yyyy-MM-dd") "/"
                                         (~t date "yyyy-MM-dd") ".json")
     (λ (out)
-      (~> (string-append "https://www.zacks.com/includes/classes/z2_class_calendarfunctions_data.php?calltype=eventscal&date="
-                         (number->string (->posix (at-time date (time 6)))))
-          (string->url _)
-          (get-pure-port _)
-          (copy-port _ out)))
-    #:exists 'append))
+      (with-handlers ([exn:fail?
+                       (λ (error)
+                         (displayln (string-append "Encountered error for " (~t date "yyyy-MM-dd")))
+                         (displayln ((error-value->string-handler) error 1000)))])
+        (~> (string-append "https://www.zacks.com/includes/classes/z2_class_calendarfunctions_data.php?calltype=eventscal&date="
+                           (number->string (->posix (at-time date (time 6)))))
+            (get _)
+            (response-body _)
+            (write-bytes _ out))))
+    #:exists 'replace))
 
 (define end-date (make-parameter (+days (today) (* 7 6))))
 
@@ -40,7 +44,7 @@
 (define delay-interval 10)
 
 (with-task-server (for-each (λ (i) (schedule-delayed-task (λ () (download-day (+days (start-date) i)))
-                                                          (* i 10)))
+                                                          (* i delay-interval)))
                             (range 0 (period-ref (period-between (start-date) (end-date) '(days)) 'days)))
   ; add a final task that will halt the task server
   (schedule-delayed-task

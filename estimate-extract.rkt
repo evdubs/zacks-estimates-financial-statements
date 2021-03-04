@@ -2,7 +2,7 @@
 
 (require db
          gregor
-         net/url
+         net/http-easy
          racket/cmdline
          racket/file
          racket/list
@@ -18,9 +18,9 @@
                                 (displayln (string-append "Encountered error for " symbol))
                                 (displayln ((error-value->string-handler) error 1000)))])
                (~> (string-append "https://www.zacks.com/stock/quote/" symbol "/detailed-estimates")
-                   (string->url _)
-                   (get-pure-port _)
-                   (copy-port _ out))))
+                   (get _)
+                   (response-body _)
+                   (write-bytes _ out))))
     #:exists 'replace))
 
 (define db-user (make-parameter "user"))
