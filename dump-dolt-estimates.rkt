@@ -47,13 +47,13 @@
             (define rank-score-file (string-append (base-folder) "/rank-score-" date ".csv"))
             (call-with-output-file rank-score-file
               (λ (out)
-                (displayln "act_symbol,date,rank,value,growth,momentum,vgm" out)
+                (displayln "date,act_symbol,rank,value,growth,momentum,vgm" out)
                 (for-each (λ (row)
                             (displayln (string-join (vector->list row) ",") out))
                           (query-rows dbc "
 select
-  act_symbol::text,
   date::text,
+  act_symbol::text,
   rank::text,
   value::text,
   growth::text,
@@ -91,13 +91,13 @@ order by
             (define eps-estimate-file (string-append (base-folder) "/eps-estimate-" date ".csv"))
             (call-with-output-file eps-estimate-file
               (λ (out)
-                (displayln "act_symbol,date,period,period_end_date,consensus,recent,count,high,low,year_ago" out)
+                (displayln "date,act_symbol,period,period_end_date,consensus,recent,count,high,low,year_ago" out)
                 (for-each (λ (row)
                             (displayln (string-join (vector->list row) ",") out))
                           (query-rows dbc "
 select
-  act_symbol::text,
   date::text,
+  act_symbol::text,
   period::text,
   period_end_date::text,
   coalesce(consensus::text, ''),
@@ -138,13 +138,13 @@ order by
             (define sales-estimate-file (string-append (base-folder) "/sales-estimate-" date ".csv"))
             (call-with-output-file sales-estimate-file
               (λ (out)
-                (displayln "act_symbol,date,period,period_end_date,consensus,count,high,low,year_ago" out)
+                (displayln "date,act_symbol,period,period_end_date,consensus,count,high,low,year_ago" out)
                 (for-each (λ (row)
                             (displayln (string-join (vector->list row) ",") out))
                           (query-rows dbc "
 select
-  act_symbol::text,
   date::text,
+  act_symbol::text,
   period::text,
   period_end_date::text,
   coalesce(consensus::text, ''),
