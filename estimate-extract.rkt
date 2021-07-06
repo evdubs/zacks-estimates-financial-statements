@@ -90,7 +90,7 @@ order by
 
 (define delays (map (λ (x) (* delay-interval x)) (range 0 (length symbols))))
 
-(with-task-server (for-each (λ (l) (schedule-delayed-task (λ () (download-estimates (first l)))
+(with-task-server (for-each (λ (l) (schedule-delayed-task (λ () (thread (λ () (download-estimates (first l)))))
                                                           (second l)))
                             (map list symbols delays))
   ; add a final task that will halt the task server
