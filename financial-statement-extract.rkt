@@ -116,11 +116,11 @@ order by
 
 (define delays (map (λ (x) (* delay-interval x)) (range 0 (length symbols))))
 
-(with-task-server (for-each (λ (l) (schedule-delayed-task (λ () (download-income-statement (first l)))
+(with-task-server (for-each (λ (l) (schedule-delayed-task (λ () (thread (λ () (download-income-statement (first l)))))
                                                           (second l))
-                              (schedule-delayed-task (λ () (download-balance-sheet (first l)))
+                              (schedule-delayed-task (λ () (thread (λ () (download-balance-sheet (first l)))))
                                                      (+ 4 (second l)))
-                              (schedule-delayed-task (λ () (download-cash-flow-statement (first l)))
+                              (schedule-delayed-task (λ () (thread (λ () (download-cash-flow-statement (first l)))))
                                                      (+ 8 (second l))))
                             (map list symbols delays))
   ; add a final task that will halt the task server
