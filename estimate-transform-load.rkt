@@ -105,7 +105,8 @@
         (regexp-replace #rx"^M$" _ "NA") ; no clue what the "M" value means in the estimate cells, but we set it to NA
         (string-replace _ "M" "e6")
         (string-replace _ "(" "")
-        (string-replace _ ")" ""))))
+        (string-replace _ ")" "")
+        (string-replace _ "," ""))))
 
 (define base-folder (make-parameter "/var/tmp/zacks/estimates"))
 

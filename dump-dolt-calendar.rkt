@@ -42,7 +42,7 @@
 
 (define earnings-calendar-file (string-append (base-folder) "/earnings-calendar-" (as-of-date) ".csv"))
 
-(call-with-output-file earnings-calendar-file
+(call-with-output-file* earnings-calendar-file
   (λ (out)
     (displayln "act_symbol,date,when" out)
     (for-each (λ (row)

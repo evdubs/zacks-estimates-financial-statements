@@ -13,7 +13,7 @@
 
 (define (download-day date)
   (make-directory* (string-append "/var/tmp/zacks/earnings-calendar/" (~t (today) "yyyy-MM-dd")))
-  (call-with-output-file (string-append "/var/tmp/zacks/earnings-calendar/" (~t (today) "yyyy-MM-dd") "/"
+  (call-with-output-file* (string-append "/var/tmp/zacks/earnings-calendar/" (~t (today) "yyyy-MM-dd") "/"
                                         (~t date "yyyy-MM-dd") ".json")
     (λ (out)
       (with-handlers ([exn:fail?

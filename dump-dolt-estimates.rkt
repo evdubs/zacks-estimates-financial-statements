@@ -45,7 +45,7 @@
 ; rank-score
 (for-each (λ (date)
             (define rank-score-file (string-append (base-folder) "/rank-score-" date ".csv"))
-            (call-with-output-file rank-score-file
+            (call-with-output-file* rank-score-file
               (λ (out)
                 (displayln "date,act_symbol,rank,value,growth,momentum,vgm" out)
                 (for-each (λ (row)
@@ -89,7 +89,7 @@ order by
 ; eps-estimate
 (for-each (λ (date)
             (define eps-estimate-file (string-append (base-folder) "/eps-estimate-" date ".csv"))
-            (call-with-output-file eps-estimate-file
+            (call-with-output-file* eps-estimate-file
               (λ (out)
                 (displayln "date,act_symbol,period,period_end_date,consensus,recent,count,high,low,year_ago" out)
                 (for-each (λ (row)
@@ -136,7 +136,7 @@ order by
 ; sales-estimate
 (for-each (λ (date)
             (define sales-estimate-file (string-append (base-folder) "/sales-estimate-" date ".csv"))
-            (call-with-output-file sales-estimate-file
+            (call-with-output-file* sales-estimate-file
               (λ (out)
                 (displayln "date,act_symbol,period,period_end_date,consensus,count,high,low,year_ago" out)
                 (for-each (λ (row)

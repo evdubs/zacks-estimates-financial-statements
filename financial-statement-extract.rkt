@@ -12,7 +12,7 @@
 
 (define (download-income-statement symbol)
   (make-directory* (string-append "/var/tmp/zacks/income-statement/" (~t (today) "yyyy-MM-dd")))
-  (call-with-output-file (string-append "/var/tmp/zacks/income-statement/" (~t (today) "yyyy-MM-dd") "/" symbol ".income-statement.html")
+  (call-with-output-file* (string-append "/var/tmp/zacks/income-statement/" (~t (today) "yyyy-MM-dd") "/" symbol ".income-statement.html")
     (λ (out) (with-handlers ([exn:fail?
                               (λ (error)
                                 (displayln (string-append "Encountered error for " symbol))
@@ -25,7 +25,7 @@
 
 (define (download-balance-sheet symbol)
   (make-directory* (string-append "/var/tmp/zacks/balance-sheet/" (~t (today) "yyyy-MM-dd")))
-  (call-with-output-file (string-append "/var/tmp/zacks/balance-sheet/" (~t (today) "yyyy-MM-dd") "/" symbol ".balance-sheet.html")
+  (call-with-output-file* (string-append "/var/tmp/zacks/balance-sheet/" (~t (today) "yyyy-MM-dd") "/" symbol ".balance-sheet.html")
     (λ (out) (with-handlers ([exn:fail?
                               (λ (error)
                                 (displayln (string-append "Encountered error for " symbol))
@@ -38,7 +38,7 @@
 
 (define (download-cash-flow-statement symbol)
   (make-directory* (string-append "/var/tmp/zacks/cash-flow-statement/" (~t (today) "yyyy-MM-dd")))
-  (call-with-output-file (string-append "/var/tmp/zacks/cash-flow-statement/" (~t (today) "yyyy-MM-dd") "/" symbol ".cash-flow-statement.html")
+  (call-with-output-file* (string-append "/var/tmp/zacks/cash-flow-statement/" (~t (today) "yyyy-MM-dd") "/" symbol ".cash-flow-statement.html")
     (λ (out) (with-handlers ([exn:fail?
                               (λ (error)
                                 (displayln (string-append "Encountered error for " symbol))
