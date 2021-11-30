@@ -33,8 +33,8 @@ racket estimate-extract.rkt [ <option> ... ]
   -u <user>, --db-user <user> : Database user name. Defaults to 'user'
   --help, -h : Show this help
   -- : Do not treat any remaining argument as a switch (at this level)
- Multiple single-letter switches can be combined after one `-'; for
-  example: `-h-' is the same as `-h --'
+ Multiple single-letter switches can be combined after one `-`. For
+  example: `-h-` is the same as `-h --`
 
 $ racket estimate-transform-load.rkt -h
 racket estimate-transform-load.rkt [ <option> ... ]
@@ -46,8 +46,8 @@ racket estimate-transform-load.rkt [ <option> ... ]
   -u <user>, --db-user <user> : Database user name. Defaults to 'user'
   --help, -h : Show this help
   -- : Do not treat any remaining argument as a switch (at this level)
- Multiple single-letter switches can be combined after one `-'; for
-  example: `-h-' is the same as `-h --'
+ Multiple single-letter switches can be combined after one `-`. For
+  example: `-h-` is the same as `-h --`
 
 $ racket financial-statement-extract.rkt -h
 racket financial-statement-extract.rkt [ <option> ... ]
@@ -59,8 +59,8 @@ racket financial-statement-extract.rkt [ <option> ... ]
   -u <user>, --db-user <user> : Database user name. Defaults to 'user'
   --help, -h : Show this help
   -- : Do not treat any remaining argument as a switch (at this level)
- Multiple single-letter switches can be combined after one `-'; for
-  example: `-h-' is the same as `-h --'
+ Multiple single-letter switches can be combined after one `-`. For
+  example: `-h-` is the same as `-h --`
 
 $ racket balance-sheet-transform-load.rkt -h
 racket balance-sheet-transform-load.rkt [ <option> ... ]
@@ -72,8 +72,8 @@ racket balance-sheet-transform-load.rkt [ <option> ... ]
   -u <user>, --db-user <user> : Database user name. Defaults to 'user'
   --help, -h : Show this help
   -- : Do not treat any remaining argument as a switch (at this level)
- Multiple single-letter switches can be combined after one `-'; for
-  example: `-h-' is the same as `-h --'
+ Multiple single-letter switches can be combined after one `-`. For
+  example: `-h-` is the same as `-h --`
 
 $ racket cash-flow-statement-transform-load.rkt -h
 racket cash-flow-statement-transform-load.rkt [ <option> ... ]
@@ -85,8 +85,8 @@ racket cash-flow-statement-transform-load.rkt [ <option> ... ]
   -u <user>, --db-user <user> : Database user name. Defaults to 'user'
   --help, -h : Show this help
   -- : Do not treat any remaining argument as a switch (at this level)
- Multiple single-letter switches can be combined after one `-'; for
-  example: `-h-' is the same as `-h --'
+ Multiple single-letter switches can be combined after one `-`. For
+  example: `-h-` is the same as `-h --`
 
 $ racket income-statement-transform-load.rkt -h
 racket income-statement-transform-load.rkt [ <option> ... ]
@@ -98,8 +98,8 @@ racket income-statement-transform-load.rkt [ <option> ... ]
   -u <user>, --db-user <user> : Database user name. Defaults to 'user'
   --help, -h : Show this help
   -- : Do not treat any remaining argument as a switch (at this level)
- Multiple single-letter switches can be combined after one `-'; for
-  example: `-h-' is the same as `-h --'
+ Multiple single-letter switches can be combined after one `-`. For
+  example: `-h-` is the same as `-h --`
 
 $ racket earnings-calendar-extract.rkt -h
 racket earnings-calendar-extract.rkt [ <option> ... ]
@@ -108,8 +108,8 @@ racket earnings-calendar-extract.rkt [ <option> ... ]
   -s <sd>, --start-date <sd> : Start date. Defaults to today
   --help, -h : Show this help
   -- : Do not treat any remaining argument as a switch (at this level)
- Multiple single-letter switches can be combined after one `-'; for
-  example: `-h-' is the same as `-h --'
+ Multiple single-letter switches can be combined after one `-`. For
+  example: `-h-` is the same as `-h --`
 
 $ racket earnings-calendar-transform-load.rkt -h
 racket transform-load.rkt [ <option> ... ]
@@ -121,8 +121,8 @@ racket transform-load.rkt [ <option> ... ]
   -u <user>, --db-user <user> : Database user name. Defaults to 'user'
   --help, -h : Show this help
   -- : Do not treat any remaining argument as a switch (at this level)
- Multiple single-letter switches can be combined after one `-'; for
-  example: `-h-' is the same as `-h --'
+ Multiple single-letter switches can be combined after one `-`. For
+  example: `-h-` is the same as `-h --`
 ```
 
 The provided `schema.sql` file shows the expected schema within the target PostgreSQL instance. 
