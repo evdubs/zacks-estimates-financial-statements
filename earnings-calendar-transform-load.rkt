@@ -64,6 +64,7 @@ where
             (~> (port->string in)
                 (regexp-replace* #rx"<.*?>" _ "")
                 (regexp-replace* #rx"[A-Z\\.]+ Quick Quote" _ "")
+                (string-replace _ "window.app_data = " "")
                 (string->jsexpr _)
                 (hash-ref _ 'data)
                 (for-each (λ (ticker-when-list)
