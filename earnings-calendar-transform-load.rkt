@@ -60,7 +60,7 @@ where
                                                                       file-name
                                                                       " for date "
                                                                       date-of-earnings))
-                                       (displayln ((error-value->string-handler) e 1000)))])
+                                       (displayln e))])
             (~> (port->string in)
                 (regexp-replace* #rx"<.*?>" _ "")
                 (regexp-replace* #rx"[A-Z\\.]+ Quick Quote" _ "")
@@ -72,7 +72,7 @@ where
                                                                                         (first ticker-when-list)
                                                                                         " for date "
                                                                                         date-of-earnings))
-                                                         (displayln ((error-value->string-handler) e 1000))
+                                                         (displayln e)
                                                          (rollback-transaction dbc))])
                               (start-transaction dbc)
                               (query-exec dbc "

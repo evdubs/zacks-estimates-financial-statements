@@ -16,7 +16,7 @@
     (λ (out) (with-handlers ([exn:fail?
                               (λ (error)
                                 (displayln (string-append "Encountered error for " symbol))
-                                (displayln ((error-value->string-handler) error 1000)))])
+                                (displayln error))])
                (~> (string-append "https://www.zacks.com/stock/quote/" symbol "/detailed-estimates")
                    (get _)
                    (response-body _)

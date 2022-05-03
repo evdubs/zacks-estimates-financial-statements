@@ -19,7 +19,7 @@
       (with-handlers ([exn:fail?
                        (λ (error)
                          (displayln (string-append "Encountered error for " (~t date "yyyy-MM-dd")))
-                         (displayln ((error-value->string-handler) error 1000)))])
+                         (displayln error))])
         (~> (string-append "https://www.zacks.com/includes/classes/z2_class_calendarfunctions_data.php?calltype=eventscal&date="
                            (number->string (->posix (at-time date (time 6)))))
             (get _)

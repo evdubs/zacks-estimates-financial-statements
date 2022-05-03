@@ -2,6 +2,7 @@
 
 (require db
          gregor
+         gregor/period
          html-parsing
          racket/cmdline
          racket/list
@@ -94,17 +95,25 @@
            [ticker-symbol (string-replace (string-replace file-name (path->string (current-directory)) "") ".income-statement.html" "")])
       (call-with-input-file file-name
         (λ (in) (let ([xexp (html->xexp in)])
-                  (for-each (λ (period-date)
-                              (with-handlers ([exn:fail? (λ (e) (displayln (string-append "Failed to process "
-                                                                                          ticker-symbol
-                                                                                          " for date "
-                                                                                          (~t (folder-date) "yyyy-MM-dd")))
-                                                           (displayln ((error-value->string-handler) e 1000))
-                                                           (rollback-transaction dbc)
-                                                           (set! insert-failure-counter (add1 insert-failure-counter)))])
-                                (set! insert-counter (add1 insert-counter))
-                                (start-transaction dbc)
-                                (query-exec dbc "
+                  ; we assume that if we have an updated value that is very close to our extract date that the whole set of data is bad.
+                  (with-handlers ([exn:fail? (λ (e) (displayln (string-append "Failed to extract a date from " ticker-symbol)))])
+                    (cond [(< 15 (period-ref (date-period-between (parse-date (income-statement-figure xexp #:period 'quarterly
+                                                                                                       #:date 'most-recent #:entry 'date)
+                                                                              "M/dd/yy")
+                                                                  (folder-date)
+                                                                  (list 'days))
+                                             'days))
+                           (for-each (λ (period-date)
+                                       (with-handlers ([exn:fail? (λ (e) (displayln (string-append "Failed to process "
+                                                                                                   ticker-symbol
+                                                                                                   " for date "
+                                                                                                   (~t (folder-date) "yyyy-MM-dd")))
+                                                                     (displayln e)
+                                                                     (rollback-transaction dbc)
+                                                                     (set! insert-failure-counter (add1 insert-failure-counter)))])
+                                         (set! insert-counter (add1 insert-counter))
+                                         (start-transaction dbc)
+                                         (query-exec dbc "
 -- We use the common table expression below in order to check if we're receiving
 -- bad values from Zacks. When the new fiscal year occurs, Zacks apparently has a
 -- bug where values from the prior year are copied into the new year column. We
@@ -217,33 +226,55 @@ insert into zacks.income_statement
   $23::text::decimal
 ) on conflict (act_symbol, date, period) do nothing;
 "
-                                            ticker-symbol
-                                            (income-statement-figure xexp #:period (first period-date) #:date (second period-date) #:entry 'date)
-                                            (symbol->string (first period-date))
-                                            (income-statement-figure xexp #:period (first period-date) #:date (second period-date) #:entry 'sales)
-                                            (income-statement-figure xexp #:period (first period-date) #:date (second period-date) #:entry 'cost-of-goods)
-                                            (income-statement-figure xexp #:period (first period-date) #:date (second period-date) #:entry 'gross-profit)
-                                            (income-statement-figure xexp #:period (first period-date) #:date (second period-date) #:entry 'selling-administrative-depreciation-amortization-expenses)
-                                            (income-statement-figure xexp #:period (first period-date) #:date (second period-date) #:entry 'income-after-depreciation-and-amortization)
-                                            (income-statement-figure xexp #:period (first period-date) #:date (second period-date) #:entry 'non-operating-income)
-                                            (income-statement-figure xexp #:period (first period-date) #:date (second period-date) #:entry 'interest-expense)
-                                            (income-statement-figure xexp #:period (first period-date) #:date (second period-date) #:entry 'pretax-income)
-                                            (income-statement-figure xexp #:period (first period-date) #:date (second period-date) #:entry 'income-taxes)
-                                            (income-statement-figure xexp #:period (first period-date) #:date (second period-date) #:entry 'minority-interest)
-                                            (income-statement-figure xexp #:period (first period-date) #:date (second period-date) #:entry 'investment-gains)
-                                            (income-statement-figure xexp #:period (first period-date) #:date (second period-date) #:entry 'other-income)
-                                            (income-statement-figure xexp #:period (first period-date) #:date (second period-date) #:entry 'income-from-continuing-operations)
-                                            (income-statement-figure xexp #:period (first period-date) #:date (second period-date) #:entry 'extras-and-discontinued-operations)
-                                            (income-statement-figure xexp #:period (first period-date) #:date (second period-date) #:entry 'net-income)
-                                            (income-statement-figure xexp #:period (first period-date) #:date (second period-date) #:entry 'income-before-depreciation-and-amortization)
-                                            (income-statement-figure xexp #:period (first period-date) #:date (second period-date) #:entry 'depreciation-and-amortization)
-                                            (income-statement-figure xexp #:period (first period-date) #:date (second period-date) #:entry 'average-shares)
-                                            (income-statement-figure xexp #:period (first period-date) #:date (second period-date) #:entry 'diluted-eps-before-non-recurring-items)
-                                            (income-statement-figure xexp #:period (first period-date) #:date (second period-date) #:entry 'diluted-net-eps))
-                                (commit-transaction dbc)
-                                (set! insert-success-counter (add1 insert-success-counter))))
-                            (cartesian-product (list 'annual 'quarterly)
-                                               (list 'fifth-most-recent 'fourth-most-recent 'third-most-recent 'second-most-recent 'most-recent)))))))))
+                                                     ticker-symbol
+                                                     (income-statement-figure xexp #:period (first period-date) #:date (second period-date)
+                                                                              #:entry 'date)
+                                                     (symbol->string (first period-date))
+                                                     (income-statement-figure xexp #:period (first period-date) #:date (second period-date)
+                                                                              #:entry 'sales)
+                                                     (income-statement-figure xexp #:period (first period-date) #:date (second period-date)
+                                                                              #:entry 'cost-of-goods)
+                                                     (income-statement-figure xexp #:period (first period-date) #:date (second period-date)
+                                                                              #:entry 'gross-profit)
+                                                     (income-statement-figure xexp #:period (first period-date) #:date (second period-date)
+                                                                              #:entry 'selling-administrative-depreciation-amortization-expenses)
+                                                     (income-statement-figure xexp #:period (first period-date) #:date (second period-date)
+                                                                              #:entry 'income-after-depreciation-and-amortization)
+                                                     (income-statement-figure xexp #:period (first period-date) #:date (second period-date)
+                                                                              #:entry 'non-operating-income)
+                                                     (income-statement-figure xexp #:period (first period-date) #:date (second period-date)
+                                                                              #:entry 'interest-expense)
+                                                     (income-statement-figure xexp #:period (first period-date) #:date (second period-date)
+                                                                              #:entry 'pretax-income)
+                                                     (income-statement-figure xexp #:period (first period-date) #:date (second period-date)
+                                                                              #:entry 'income-taxes)
+                                                     (income-statement-figure xexp #:period (first period-date) #:date (second period-date)
+                                                                              #:entry 'minority-interest)
+                                                     (income-statement-figure xexp #:period (first period-date) #:date (second period-date)
+                                                                              #:entry 'investment-gains)
+                                                     (income-statement-figure xexp #:period (first period-date) #:date (second period-date)
+                                                                              #:entry 'other-income)
+                                                     (income-statement-figure xexp #:period (first period-date) #:date (second period-date)
+                                                                              #:entry 'income-from-continuing-operations)
+                                                     (income-statement-figure xexp #:period (first period-date) #:date (second period-date)
+                                                                              #:entry 'extras-and-discontinued-operations)
+                                                     (income-statement-figure xexp #:period (first period-date) #:date (second period-date)
+                                                                              #:entry 'net-income)
+                                                     (income-statement-figure xexp #:period (first period-date) #:date (second period-date)
+                                                                              #:entry 'income-before-depreciation-and-amortization)
+                                                     (income-statement-figure xexp #:period (first period-date) #:date (second period-date)
+                                                                              #:entry 'depreciation-and-amortization)
+                                                     (income-statement-figure xexp #:period (first period-date) #:date (second period-date)
+                                                                              #:entry 'average-shares)
+                                                     (income-statement-figure xexp #:period (first period-date) #:date (second period-date)
+                                                                              #:entry 'diluted-eps-before-non-recurring-items)
+                                                     (income-statement-figure xexp #:period (first period-date) #:date (second period-date)
+                                                                              #:entry 'diluted-net-eps))
+                                         (commit-transaction dbc)
+                                         (set! insert-success-counter (add1 insert-success-counter))))
+                                     (cartesian-product (list 'annual 'quarterly)
+                                                        (list 'fifth-most-recent 'fourth-most-recent 'third-most-recent 'second-most-recent 'most-recent)))]
+                          [else (displayln (string-append "Skipping " ticker-symbol " as the data is most likely using the wrong date."))]))))))))
 
 (disconnect dbc)
 

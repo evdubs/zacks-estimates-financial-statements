@@ -2,6 +2,7 @@
 
 (require db
          gregor
+         gregor/period
          html-parsing
          racket/cmdline
          racket/list
@@ -96,17 +97,25 @@
            [ticker-symbol (string-replace (string-replace file-name (path->string (current-directory)) "") ".cash-flow-statement.html" "")])
       (call-with-input-file file-name
         (λ (in) (let ([xexp (html->xexp in)])
-                  (for-each (λ (date)
-                              (with-handlers ([exn:fail? (λ (e) (displayln (string-append "Failed to process "
-                                                                                          ticker-symbol
-                                                                                          " for date "
-                                                                                          (~t (folder-date) "yyyy-MM-dd")))
-                                                           (displayln ((error-value->string-handler) e 1000))
-                                                           (rollback-transaction dbc)
-                                                           (set! insert-failure-counter (add1 insert-failure-counter)))])
-                                (set! insert-counter (add1 insert-counter))
-                                (start-transaction dbc)
-                                (query-exec dbc "
+                  ; we assume that if we have an updated value that is very close to our extract date that the whole set of data is bad.
+                  (with-handlers ([exn:fail? (λ (e) (displayln (string-append "Failed to extract a date from " ticker-symbol)))])
+                    (cond [(< 15 (period-ref (date-period-between (parse-date (cash-flow-statement-figure xexp #:section 'cash-flow
+                                                                                                          #:date 'most-recent #:entry 'date)
+                                                                              "M/dd/yyyy")
+                                                                  (folder-date)
+                                                                  (list 'days))
+                                             'days))
+                           (for-each (λ (date)
+                                       (with-handlers ([exn:fail? (λ (e) (displayln (string-append "Failed to process "
+                                                                                                   ticker-symbol
+                                                                                                   " for date "
+                                                                                                   (~t (folder-date) "yyyy-MM-dd")))
+                                                                     (displayln e)
+                                                                     (rollback-transaction dbc)
+                                                                     (set! insert-failure-counter (add1 insert-failure-counter)))])
+                                         (set! insert-counter (add1 insert-counter))
+                                         (start-transaction dbc)
+                                         (query-exec dbc "
 -- We use the common table expression below in order to check if we're receiving
 -- bad values from Zacks. When the new fiscal year occurs, Zacks apparently has a
 -- bug where values from the prior year are copied into the new year column. We
@@ -204,33 +213,57 @@ insert into zacks.cash_flow_statement
   $24::text::decimal
 ) on conflict (act_symbol, date, period) do nothing;
 "
-                                            ticker-symbol
-                                            (cash-flow-statement-figure xexp #:section 'cash-flow #:date date #:entry 'date)
-                                            (cash-flow-statement-figure xexp #:section 'cash-flow #:date date #:entry 'net-income)
-                                            (cash-flow-statement-figure xexp #:section 'cash-flow #:date date #:entry 'depreciation-amortization-and-depletion)
-                                            (cash-flow-statement-figure xexp #:section 'cash-flow #:date date #:entry 'net-change-from-assets)
-                                            (cash-flow-statement-figure xexp #:section 'cash-flow #:date date #:entry 'net-cash-from-discontinued-operations)
-                                            (cash-flow-statement-figure xexp #:section 'cash-flow #:date date #:entry 'other-operating-activities)
-                                            (cash-flow-statement-figure xexp #:section 'cash-flow #:date date #:entry 'net-cash-from-operating-activities)
-                                            (cash-flow-statement-figure xexp #:section 'cash-flow #:date date #:entry 'property-and-equipment)
-                                            (cash-flow-statement-figure xexp #:section 'cash-flow #:date date #:entry 'acquisition-of-subsidiaries)
-                                            (cash-flow-statement-figure xexp #:section 'cash-flow #:date date #:entry 'investments)
-                                            (cash-flow-statement-figure xexp #:section 'cash-flow #:date date #:entry 'other-investing-activities)
-                                            (cash-flow-statement-figure xexp #:section 'cash-flow #:date date #:entry 'net-cash-from-investing-activities)
-                                            (cash-flow-statement-figure xexp #:section 'uses-of-funds #:date date #:entry 'issuance-of-capital-stock)
-                                            (cash-flow-statement-figure xexp #:section 'uses-of-funds #:date date #:entry 'issuance-of-debt)
-                                            (cash-flow-statement-figure xexp #:section 'uses-of-funds #:date date #:entry 'increase-short-term-debt)
-                                            (cash-flow-statement-figure xexp #:section 'uses-of-funds #:date date #:entry 'payment-of-dividends-and-other-distributions)
-                                            (cash-flow-statement-figure xexp #:section 'uses-of-funds #:date date #:entry 'other-financing-activities)
-                                            (cash-flow-statement-figure xexp #:section 'uses-of-funds #:date date #:entry 'net-cash-from-financing-activities)
-                                            (cash-flow-statement-figure xexp #:section 'uses-of-funds #:date date #:entry 'effect-of-exchange-rate-changes)
-                                            (cash-flow-statement-figure xexp #:section 'uses-of-funds #:date date #:entry 'net-change-in-cash-and-equivalents)
-                                            (cash-flow-statement-figure xexp #:section 'uses-of-funds #:date date #:entry 'cash-at-beginning-of-period)
-                                            (cash-flow-statement-figure xexp #:section 'uses-of-funds #:date date #:entry 'cash-at-end-of-period)
-                                            (cash-flow-statement-figure xexp #:section 'uses-of-funds #:date date #:entry 'diluted-net-eps))
-                                (commit-transaction dbc)
-                                (set! insert-success-counter (add1 insert-success-counter))))
-                            (list 'fifth-most-recent 'fourth-most-recent 'third-most-recent 'second-most-recent 'most-recent))))))))
+                                                     ticker-symbol
+                                                     (cash-flow-statement-figure xexp #:section 'cash-flow #:date date
+                                                                                 #:entry 'date)
+                                                     (cash-flow-statement-figure xexp #:section 'cash-flow #:date date
+                                                                                 #:entry 'net-income)
+                                                     (cash-flow-statement-figure xexp #:section 'cash-flow #:date date
+                                                                                 #:entry 'depreciation-amortization-and-depletion)
+                                                     (cash-flow-statement-figure xexp #:section 'cash-flow #:date date
+                                                                                 #:entry 'net-change-from-assets)
+                                                     (cash-flow-statement-figure xexp #:section 'cash-flow #:date date
+                                                                                 #:entry 'net-cash-from-discontinued-operations)
+                                                     (cash-flow-statement-figure xexp #:section 'cash-flow #:date date
+                                                                                 #:entry 'other-operating-activities)
+                                                     (cash-flow-statement-figure xexp #:section 'cash-flow #:date date
+                                                                                 #:entry 'net-cash-from-operating-activities)
+                                                     (cash-flow-statement-figure xexp #:section 'cash-flow #:date date
+                                                                                 #:entry 'property-and-equipment)
+                                                     (cash-flow-statement-figure xexp #:section 'cash-flow #:date date
+                                                                                 #:entry 'acquisition-of-subsidiaries)
+                                                     (cash-flow-statement-figure xexp #:section 'cash-flow #:date date
+                                                                                 #:entry 'investments)
+                                                     (cash-flow-statement-figure xexp #:section 'cash-flow #:date date
+                                                                                 #:entry 'other-investing-activities)
+                                                     (cash-flow-statement-figure xexp #:section 'cash-flow #:date date
+                                                                                 #:entry 'net-cash-from-investing-activities)
+                                                     (cash-flow-statement-figure xexp #:section 'uses-of-funds #:date date
+                                                                                 #:entry 'issuance-of-capital-stock)
+                                                     (cash-flow-statement-figure xexp #:section 'uses-of-funds #:date date
+                                                                                 #:entry 'issuance-of-debt)
+                                                     (cash-flow-statement-figure xexp #:section 'uses-of-funds #:date date
+                                                                                 #:entry 'increase-short-term-debt)
+                                                     (cash-flow-statement-figure xexp #:section 'uses-of-funds #:date date
+                                                                                 #:entry 'payment-of-dividends-and-other-distributions)
+                                                     (cash-flow-statement-figure xexp #:section 'uses-of-funds #:date date
+                                                                                 #:entry 'other-financing-activities)
+                                                     (cash-flow-statement-figure xexp #:section 'uses-of-funds #:date date
+                                                                                 #:entry 'net-cash-from-financing-activities)
+                                                     (cash-flow-statement-figure xexp #:section 'uses-of-funds #:date date
+                                                                                 #:entry 'effect-of-exchange-rate-changes)
+                                                     (cash-flow-statement-figure xexp #:section 'uses-of-funds #:date date
+                                                                                 #:entry 'net-change-in-cash-and-equivalents)
+                                                     (cash-flow-statement-figure xexp #:section 'uses-of-funds #:date date
+                                                                                 #:entry 'cash-at-beginning-of-period)
+                                                     (cash-flow-statement-figure xexp #:section 'uses-of-funds #:date date
+                                                                                 #:entry 'cash-at-end-of-period)
+                                                     (cash-flow-statement-figure xexp #:section 'uses-of-funds #:date date
+                                                                                 #:entry 'diluted-net-eps))
+                                         (commit-transaction dbc)
+                                         (set! insert-success-counter (add1 insert-success-counter))))
+                                     (list 'fifth-most-recent 'fourth-most-recent 'third-most-recent 'second-most-recent 'most-recent))]
+                          [else (displayln (string-append "Skipping " ticker-symbol " as the data is most likely using the wrong date."))]))))))))
 
 (disconnect dbc)
 

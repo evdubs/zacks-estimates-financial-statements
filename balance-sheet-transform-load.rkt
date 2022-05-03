@@ -2,6 +2,7 @@
 
 (require db
          gregor
+         gregor/period
          html-parsing
          racket/cmdline
          racket/list
@@ -114,20 +115,28 @@
 (parameterize ([current-directory (string-append (base-folder) "/" (~t (folder-date) "yyyy-MM-dd") "/")])
   (for ([p (sequence-filter (λ (p) (string-contains? (path->string p) ".balance-sheet.html")) (in-directory (current-directory)))])
     (let* ([file-name (path->string p)]
-          [ticker-symbol (string-replace (string-replace file-name (path->string (current-directory)) "") ".balance-sheet.html" "")])
+           [ticker-symbol (string-replace (string-replace file-name (path->string (current-directory)) "") ".balance-sheet.html" "")])
       (call-with-input-file file-name
         (λ (in) (let ([xexp (html->xexp in)])
-                  (for-each (λ (period-date)
-                              (with-handlers ([exn:fail? (λ (e) (displayln (string-append "Failed to process "
-                                                                                          ticker-symbol
-                                                                                          " for date "
-                                                                                          (~t (folder-date) "yyyy-MM-dd")))
-                                                           (displayln ((error-value->string-handler) e 1000))
-                                                           (rollback-transaction dbc)
-                                                           (set! insert-failure-counter (add1 insert-failure-counter)))])
-                                (set! insert-counter (add1 insert-counter))
-                                (start-transaction dbc)
-                                (query-exec dbc "
+                  ; we assume that if we have an updated value that is very close to our extract date that the whole set of data is bad.
+                  (with-handlers ([exn:fail? (λ (e) (displayln (string-append "Failed to extract a date from " ticker-symbol)))])
+                    (cond [(< 15 (period-ref (date-period-between (parse-date (balance-sheet-figure xexp #:section 'assets #:period 'quarterly
+                                                                                                    #:date 'most-recent #:entry 'date)
+                                                                              "M/dd/yyyy")
+                                                                  (folder-date)
+                                                                  (list 'days))
+                                             'days))
+                           (for-each (λ (period-date)
+                                       (with-handlers ([exn:fail? (λ (e) (displayln (string-append "Failed to insert data for "
+                                                                                                   ticker-symbol
+                                                                                                   " for date "
+                                                                                                   (~t (folder-date) "yyyy-MM-dd")))
+                                                                     (displayln e)
+                                                                     (rollback-transaction dbc)
+                                                                     (set! insert-failure-counter (add1 insert-failure-counter)))])
+                                         (set! insert-counter (add1 insert-counter))
+                                         (start-transaction dbc)
+                                         (query-exec dbc "
 -- We use the common table expression below in order to check if we're receiving
 -- bad values from Zacks. When the new fiscal year occurs, Zacks apparently has a
 -- bug where values from the prior year are copied into the new year column. We
@@ -207,37 +216,37 @@ insert into zacks.balance_sheet_assets
   $16::text::decimal * 1e6
 ) on conflict (act_symbol, date, period) do nothing;
 "
-                                            ticker-symbol
-                                            (balance-sheet-figure xexp #:section 'assets #:period (first period-date) #:date (second period-date)
-                                                                  #:entry 'date)
-                                            (symbol->string (first period-date))
-                                            (balance-sheet-figure xexp #:section 'assets #:period (first period-date) #:date (second period-date)
-                                                                  #:entry 'cash-and-equivalents)
-                                            (balance-sheet-figure xexp #:section 'assets #:period (first period-date) #:date (second period-date)
-                                                                  #:entry 'receivables)
-                                            (balance-sheet-figure xexp #:section 'assets #:period (first period-date) #:date (second period-date)
-                                                                  #:entry 'notes-receivable)
-                                            (balance-sheet-figure xexp #:section 'assets #:period (first period-date) #:date (second period-date)
-                                                                  #:entry 'inventories)
-                                            (balance-sheet-figure xexp #:section 'assets #:period (first period-date) #:date (second period-date)
-                                                                  #:entry 'other-current-assets)
-                                            (balance-sheet-figure xexp #:section 'assets #:period (first period-date) #:date (second period-date)
-                                                                  #:entry 'total-current-assets)
-                                            (balance-sheet-figure xexp #:section 'assets #:period (first period-date) #:date (second period-date)
-                                                                  #:entry 'net-property-and-equipment)
-                                            (balance-sheet-figure xexp #:section 'assets #:period (first period-date) #:date (second period-date)
-                                                                  #:entry 'investments-and-advances)
-                                            (balance-sheet-figure xexp #:section 'assets #:period (first period-date) #:date (second period-date)
-                                                                  #:entry 'other-non-current-assets)
-                                            (balance-sheet-figure xexp #:section 'assets #:period (first period-date) #:date (second period-date)
-                                                                  #:entry 'deferred-charges)
-                                            (balance-sheet-figure xexp #:section 'assets #:period (first period-date) #:date (second period-date)
-                                                                  #:entry 'intangibles)
-                                            (balance-sheet-figure xexp #:section 'assets #:period (first period-date) #:date (second period-date)
-                                                                  #:entry 'deposits-and-other-assets)
-                                            (balance-sheet-figure xexp #:section 'assets #:period (first period-date) #:date (second period-date)
-                                                                  #:entry 'total-assets))
-                                (query-exec dbc "
+                                                     ticker-symbol
+                                                     (balance-sheet-figure xexp #:section 'assets #:period (first period-date) #:date (second period-date)
+                                                                           #:entry 'date)
+                                                     (symbol->string (first period-date))
+                                                     (balance-sheet-figure xexp #:section 'assets #:period (first period-date) #:date (second period-date)
+                                                                           #:entry 'cash-and-equivalents)
+                                                     (balance-sheet-figure xexp #:section 'assets #:period (first period-date) #:date (second period-date)
+                                                                           #:entry 'receivables)
+                                                     (balance-sheet-figure xexp #:section 'assets #:period (first period-date) #:date (second period-date)
+                                                                           #:entry 'notes-receivable)
+                                                     (balance-sheet-figure xexp #:section 'assets #:period (first period-date) #:date (second period-date)
+                                                                           #:entry 'inventories)
+                                                     (balance-sheet-figure xexp #:section 'assets #:period (first period-date) #:date (second period-date)
+                                                                           #:entry 'other-current-assets)
+                                                     (balance-sheet-figure xexp #:section 'assets #:period (first period-date) #:date (second period-date)
+                                                                           #:entry 'total-current-assets)
+                                                     (balance-sheet-figure xexp #:section 'assets #:period (first period-date) #:date (second period-date)
+                                                                           #:entry 'net-property-and-equipment)
+                                                     (balance-sheet-figure xexp #:section 'assets #:period (first period-date) #:date (second period-date)
+                                                                           #:entry 'investments-and-advances)
+                                                     (balance-sheet-figure xexp #:section 'assets #:period (first period-date) #:date (second period-date)
+                                                                           #:entry 'other-non-current-assets)
+                                                     (balance-sheet-figure xexp #:section 'assets #:period (first period-date) #:date (second period-date)
+                                                                           #:entry 'deferred-charges)
+                                                     (balance-sheet-figure xexp #:section 'assets #:period (first period-date) #:date (second period-date)
+                                                                           #:entry 'intangibles)
+                                                     (balance-sheet-figure xexp #:section 'assets #:period (first period-date) #:date (second period-date)
+                                                                           #:entry 'deposits-and-other-assets)
+                                                     (balance-sheet-figure xexp #:section 'assets #:period (first period-date) #:date (second period-date)
+                                                                           #:entry 'total-assets))
+                                         (query-exec dbc "
 -- See note in balance_sheet_assets query above.
 with should_not_insert as (
   select
@@ -321,43 +330,43 @@ insert into zacks.balance_sheet_liabilities
   $19::text::decimal * 1e6
 ) on conflict (act_symbol, date, period) do nothing;
 "
-                                            ticker-symbol
-                                            (balance-sheet-figure xexp #:section 'liabilities #:period (first period-date) #:date (second period-date)
-                                                                  #:entry 'date)
-                                            (symbol->string (first period-date))
-                                            (balance-sheet-figure xexp #:section 'liabilities #:period (first period-date) #:date (second period-date)
-                                                                  #:entry 'notes-payable)
-                                            (balance-sheet-figure xexp #:section 'liabilities #:period (first period-date) #:date (second period-date)
-                                                                  #:entry 'accounts-payable)
-                                            (balance-sheet-figure xexp #:section 'liabilities #:period (first period-date) #:date (second period-date)
-                                                                  #:entry 'current-portion-long-term-debt)
-                                            (balance-sheet-figure xexp #:section 'liabilities #:period (first period-date) #:date (second period-date)
-                                                                  #:entry 'current-portion-capital-leases)
-                                            (balance-sheet-figure xexp #:section 'liabilities #:period (first period-date) #:date (second period-date)
-                                                                  #:entry 'accrued-expenses)
-                                            (balance-sheet-figure xexp #:section 'liabilities #:period (first period-date) #:date (second period-date)
-                                                                  #:entry 'income-taxes-payable)
-                                            (balance-sheet-figure xexp #:section 'liabilities #:period (first period-date) #:date (second period-date)
-                                                                  #:entry 'other-current-liabilities)
-                                            (balance-sheet-figure xexp #:section 'liabilities #:period (first period-date) #:date (second period-date)
-                                                                  #:entry 'total-current-liabilities)
-                                            (balance-sheet-figure xexp #:section 'liabilities #:period (first period-date) #:date (second period-date)
-                                                                  #:entry 'mortgages)
-                                            (balance-sheet-figure xexp #:section 'liabilities #:period (first period-date) #:date (second period-date)
-                                                                  #:entry 'deferred-taxes-or-income)
-                                            (balance-sheet-figure xexp #:section 'liabilities #:period (first period-date) #:date (second period-date)
-                                                                  #:entry 'convertible-debt)
-                                            (balance-sheet-figure xexp #:section 'liabilities #:period (first period-date) #:date (second period-date)
-                                                                  #:entry 'long-term-debt)
-                                            (balance-sheet-figure xexp #:section 'liabilities #:period (first period-date) #:date (second period-date)
-                                                                  #:entry 'non-current-capital-leases)
-                                            (balance-sheet-figure xexp #:section 'liabilities #:period (first period-date) #:date (second period-date)
-                                                                  #:entry 'other-non-current-liabilities)
-                                            (balance-sheet-figure xexp #:section 'liabilities #:period (first period-date) #:date (second period-date)
-                                                                  #:entry 'minority-interest)
-                                            (balance-sheet-figure xexp #:section 'liabilities #:period (first period-date) #:date (second period-date)
-                                                                  #:entry 'total-liabilities))
-                                (query-exec dbc "
+                                                     ticker-symbol
+                                                     (balance-sheet-figure xexp #:section 'liabilities #:period (first period-date) #:date (second period-date)
+                                                                           #:entry 'date)
+                                                     (symbol->string (first period-date))
+                                                     (balance-sheet-figure xexp #:section 'liabilities #:period (first period-date) #:date (second period-date)
+                                                                           #:entry 'notes-payable)
+                                                     (balance-sheet-figure xexp #:section 'liabilities #:period (first period-date) #:date (second period-date)
+                                                                           #:entry 'accounts-payable)
+                                                     (balance-sheet-figure xexp #:section 'liabilities #:period (first period-date) #:date (second period-date)
+                                                                           #:entry 'current-portion-long-term-debt)
+                                                     (balance-sheet-figure xexp #:section 'liabilities #:period (first period-date) #:date (second period-date)
+                                                                           #:entry 'current-portion-capital-leases)
+                                                     (balance-sheet-figure xexp #:section 'liabilities #:period (first period-date) #:date (second period-date)
+                                                                           #:entry 'accrued-expenses)
+                                                     (balance-sheet-figure xexp #:section 'liabilities #:period (first period-date) #:date (second period-date)
+                                                                           #:entry 'income-taxes-payable)
+                                                     (balance-sheet-figure xexp #:section 'liabilities #:period (first period-date) #:date (second period-date)
+                                                                           #:entry 'other-current-liabilities)
+                                                     (balance-sheet-figure xexp #:section 'liabilities #:period (first period-date) #:date (second period-date)
+                                                                           #:entry 'total-current-liabilities)
+                                                     (balance-sheet-figure xexp #:section 'liabilities #:period (first period-date) #:date (second period-date)
+                                                                           #:entry 'mortgages)
+                                                     (balance-sheet-figure xexp #:section 'liabilities #:period (first period-date) #:date (second period-date)
+                                                                           #:entry 'deferred-taxes-or-income)
+                                                     (balance-sheet-figure xexp #:section 'liabilities #:period (first period-date) #:date (second period-date)
+                                                                           #:entry 'convertible-debt)
+                                                     (balance-sheet-figure xexp #:section 'liabilities #:period (first period-date) #:date (second period-date)
+                                                                           #:entry 'long-term-debt)
+                                                     (balance-sheet-figure xexp #:section 'liabilities #:period (first period-date) #:date (second period-date)
+                                                                           #:entry 'non-current-capital-leases)
+                                                     (balance-sheet-figure xexp #:section 'liabilities #:period (first period-date) #:date (second period-date)
+                                                                           #:entry 'other-non-current-liabilities)
+                                                     (balance-sheet-figure xexp #:section 'liabilities #:period (first period-date) #:date (second period-date)
+                                                                           #:entry 'minority-interest)
+                                                     (balance-sheet-figure xexp #:section 'liabilities #:period (first period-date) #:date (second period-date)
+                                                                           #:entry 'total-liabilities))
+                                         (query-exec dbc "
 -- See note in balance_sheet_assets query above.
 with should_not_insert as (
   select
@@ -423,34 +432,35 @@ insert into zacks.balance_sheet_equity
   $13::text::decimal
 ) on conflict (act_symbol, date, period) do nothing;
 "
-                                            ticker-symbol
-                                            (balance-sheet-figure xexp #:section 'equity #:period (first period-date) #:date (second period-date)
-                                                                  #:entry 'date)
-                                            (symbol->string (first period-date))
-                                            (balance-sheet-figure xexp #:section 'equity #:period (first period-date) #:date (second period-date)
-                                                                  #:entry 'preferred-stock)
-                                            (balance-sheet-figure xexp #:section 'equity #:period (first period-date) #:date (second period-date)
-                                                                  #:entry 'common-stock)
-                                            (balance-sheet-figure xexp #:section 'equity #:period (first period-date) #:date (second period-date)
-                                                                  #:entry 'capital-surplus)
-                                            (balance-sheet-figure xexp #:section 'equity #:period (first period-date) #:date (second period-date)
-                                                                  #:entry 'retained-earnings)
-                                            (balance-sheet-figure xexp #:section 'equity #:period (first period-date) #:date (second period-date)
-                                                                  #:entry 'other-equity)
-                                            (balance-sheet-figure xexp #:section 'equity #:period (first period-date) #:date (second period-date)
-                                                                  #:entry 'treasury-stock)
-                                            (balance-sheet-figure xexp #:section 'equity #:period (first period-date) #:date (second period-date)
-                                                                  #:entry 'total-equity)
-                                            (balance-sheet-figure xexp #:section 'equity #:period (first period-date) #:date (second period-date)
-                                                                  #:entry 'total-liabilities-and-equity)
-                                            (balance-sheet-figure xexp #:section 'equity #:period (first period-date) #:date (second period-date)
-                                                                  #:entry 'shares-outstanding)
-                                            (balance-sheet-figure xexp #:section 'equity #:period (first period-date) #:date (second period-date)
-                                                                  #:entry 'book-value-per-share))
-                                (commit-transaction dbc)
-                                (set! insert-success-counter (add1 insert-success-counter))))
-                            (cartesian-product (list 'annual 'quarterly)
-                                               (list 'fifth-most-recent 'fourth-most-recent 'third-most-recent 'second-most-recent 'most-recent)))))))))
+                                                     ticker-symbol
+                                                     (balance-sheet-figure xexp #:section 'equity #:period (first period-date) #:date (second period-date)
+                                                                           #:entry 'date)
+                                                     (symbol->string (first period-date))
+                                                     (balance-sheet-figure xexp #:section 'equity #:period (first period-date) #:date (second period-date)
+                                                                           #:entry 'preferred-stock)
+                                                     (balance-sheet-figure xexp #:section 'equity #:period (first period-date) #:date (second period-date)
+                                                                           #:entry 'common-stock)
+                                                     (balance-sheet-figure xexp #:section 'equity #:period (first period-date) #:date (second period-date)
+                                                                           #:entry 'capital-surplus)
+                                                     (balance-sheet-figure xexp #:section 'equity #:period (first period-date) #:date (second period-date)
+                                                                           #:entry 'retained-earnings)
+                                                     (balance-sheet-figure xexp #:section 'equity #:period (first period-date) #:date (second period-date)
+                                                                           #:entry 'other-equity)
+                                                     (balance-sheet-figure xexp #:section 'equity #:period (first period-date) #:date (second period-date)
+                                                                           #:entry 'treasury-stock)
+                                                     (balance-sheet-figure xexp #:section 'equity #:period (first period-date) #:date (second period-date)
+                                                                           #:entry 'total-equity)
+                                                     (balance-sheet-figure xexp #:section 'equity #:period (first period-date) #:date (second period-date)
+                                                                           #:entry 'total-liabilities-and-equity)
+                                                     (balance-sheet-figure xexp #:section 'equity #:period (first period-date) #:date (second period-date)
+                                                                           #:entry 'shares-outstanding)
+                                                     (balance-sheet-figure xexp #:section 'equity #:period (first period-date) #:date (second period-date)
+                                                                           #:entry 'book-value-per-share))
+                                         (commit-transaction dbc)
+                                         (set! insert-success-counter (add1 insert-success-counter))))
+                                     (cartesian-product (list 'annual 'quarterly)
+                                                        (list 'fifth-most-recent 'fourth-most-recent 'third-most-recent 'second-most-recent 'most-recent)))]
+                          [else (displayln (string-append "Skipping " ticker-symbol " as the data is most likely using the wrong date."))]))))))))
 
 (disconnect dbc)
 
