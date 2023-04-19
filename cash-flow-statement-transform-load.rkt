@@ -140,8 +140,8 @@ with should_not_insert as (
       issuance_of_debt = $15::text::decimal * 1e6 and
       increase_short_term_debt = $16::text::decimal * 1e6 and
       payment_of_dividends_and_other_distributions = $17::text::decimal * 1e6 and
-      other_financing_activites = $18::text::decimal * 1e6 and
-      net_cash_from_financing_activites = $19::text::decimal * 1e6 and
+      other_financing_activities = $18::text::decimal * 1e6 and
+      net_cash_from_financing_activities = $19::text::decimal * 1e6 and
       effect_of_exchange_rate_changes = $20::text::decimal * 1e6 and
       net_change_in_cash_and_equivalents = $21::text::decimal * 1e6 and
       cash_at_beginning_of_period = $22::text::decimal * 1e6 and
@@ -175,8 +175,8 @@ insert into zacks.cash_flow_statement
   issuance_of_debt,
   increase_short_term_debt,
   payment_of_dividends_and_other_distributions,
-  other_financing_activites,
-  net_cash_from_financing_activites,
+  other_financing_activities,
+  net_cash_from_financing_activities,
   effect_of_exchange_rate_changes,
   net_change_in_cash_and_equivalents,
   cash_at_beginning_of_period,
