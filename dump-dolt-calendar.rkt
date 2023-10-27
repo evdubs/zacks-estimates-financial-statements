@@ -63,4 +63,4 @@ where
 (system (string-append "cd " (base-folder) "; /usr/local/bin/dolt table import -u earnings_calendar earnings-calendar-" (as-of-date) ".csv"))
 
 (system (string-append "cd " (base-folder) "; /usr/local/bin/dolt add earnings_calendar; "
-                       "/usr/local/bin/dolt commit -m 'earnings_calendar " (as-of-date) " update'; /usr/local/bin/dolt push"))
+                       "/usr/local/bin/dolt commit -m 'earnings_calendar " (as-of-date) " update'; /usr/local/bin/dolt push --silent"))

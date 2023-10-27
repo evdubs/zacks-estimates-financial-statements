@@ -84,7 +84,7 @@ order by
                       (end-date)))
 
 (system (string-append "cd " (base-folder) "; /usr/local/bin/dolt add rank_score; "
-                       "/usr/local/bin/dolt commit -m 'rank_score " (end-date) " update'; /usr/local/bin/dolt push"))
+                       "/usr/local/bin/dolt commit -m 'rank_score " (end-date) " update'; /usr/local/bin/dolt push --silent"))
 
 ; eps-estimate
 (for-each (λ (date)
@@ -131,7 +131,7 @@ order by
                       (end-date)))
 
 (system (string-append "cd " (base-folder) "; /usr/local/bin/dolt add eps_estimate; "
-                       "/usr/local/bin/dolt commit -m 'eps_estimate " (end-date) " update'; /usr/local/bin/dolt push"))
+                       "/usr/local/bin/dolt commit -m 'eps_estimate " (end-date) " update'; /usr/local/bin/dolt push --silent"))
 
 ; sales-estimate
 (for-each (λ (date)
@@ -177,4 +177,4 @@ order by
                       (end-date)))
 
 (system (string-append "cd " (base-folder) "; /usr/local/bin/dolt add sales_estimate; "
-                       "/usr/local/bin/dolt commit -m 'sales_estimate " (end-date) " update'; /usr/local/bin/dolt push"))
+                       "/usr/local/bin/dolt commit -m 'sales_estimate " (end-date) " update'; /usr/local/bin/dolt push --silent"))
