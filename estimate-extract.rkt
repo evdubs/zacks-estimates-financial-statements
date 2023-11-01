@@ -17,7 +17,7 @@
                               (λ (error)
                                 (displayln (string-append "Encountered error for " symbol))
                                 (displayln error))])
-               (~> (string-append "https://www.zacks.com/stock/quote/" symbol "/detailed-estimates")
+               (~> (string-append "https://www.zacks.com/stock/quote/" symbol "/detailed-earning-estimates")
                    (get _)
                    (response-body _)
                    (write-bytes _ out))))
@@ -34,7 +34,7 @@
 (define last-symbol (make-parameter ""))
 
 (command-line
- #:program "racket estimate-extract.rkt"
+ #:program "racket estimate-extract.2023-02-27.rkt"
  #:once-each
  [("-f" "--first-symbol") first
                           "First symbol to query. Defaults to nothing"
