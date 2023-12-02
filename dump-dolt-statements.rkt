@@ -322,3 +322,5 @@ order by
 
 (system (string-append "cd " (base-folder) "; /usr/local/bin/dolt add income_statement; "
                        "/usr/local/bin/dolt commit -m 'income_statement " (end-date) " update'; /usr/local/bin/dolt push --silent"))
+
+(system (string-append "cd " (base-folder) "; /usr/local/bin/dolt gc"))
