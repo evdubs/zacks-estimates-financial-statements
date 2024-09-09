@@ -178,3 +178,44 @@ order by
 
 (system (string-append "cd " (base-folder) "; /usr/local/bin/dolt add sales_estimate; "
                        "/usr/local/bin/dolt commit -m 'sales_estimate " (end-date) " update'; /usr/local/bin/dolt push --silent"))
+
+; eps-history
+(for-each (λ (date)
+            (define eps-history-file (string-append (base-folder) "/eps-history-" date ".csv"))
+            (call-with-output-file* eps-history-file
+              (λ (out)
+                (displayln "act_symbol,period_end_date,reported,estimate" out)
+                (for-each (λ (row)
+                            (displayln (string-join (vector->list row) ",") out))
+                          (query-rows dbc "
+select distinct
+  act_symbol::text,
+  period_end_date::text,
+  coalesce(reported::text, ''),
+  coalesce(estimate::text, '')
+from
+  zacks.eps_history
+where
+  period_end_date = $1::text::date
+order by
+  act_symbol, period_end_date;
+"
+                                      date)))
+              #:exists 'replace)
+            (system (string-append "cd " (base-folder) "; /usr/local/bin/dolt table import -u eps_history eps-history-" date ".csv")))
+          (query-list dbc "
+select distinct
+  period_end_date::text
+from
+  zacks.eps_history
+where
+  period_end_date >= ($1::text::date - '6 months'::interval) and
+  period_end_date <= $2::text::date
+order by
+  period_end_date;
+"
+                      (start-date)
+                      (end-date)))
+
+(system (string-append "cd " (base-folder) "; /usr/local/bin/dolt add eps_history; "
+                       "/usr/local/bin/dolt commit -m 'eps_history " (end-date) " update'; /usr/local/bin/dolt push --silent"))
