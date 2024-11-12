@@ -11,11 +11,20 @@
          threading)
 
 (define (rank xexp)
-  (let* ([zrank-path (sxpath '(html (body (@ (equal? (id "home"))))
-                                    (div (@ (equal? (id "main_content"))))
-                                    (div (@ (equal? (id "right_content"))))
-                                    (section (@ (equal? (id "quote_ribbon_v2"))))
-                                    (div 2) (div 1) p))]
+  (let* ([zrank-path (cond
+                       [(date<? (folder-date) (date 2024 11 10))
+                        (sxpath '(html (body (@ (equal? (id "home"))))
+                                       (div (@ (equal? (id "main_content"))))
+                                       (div (@ (equal? (id "right_content"))))
+                                       (section (@ (equal? (id "quote_ribbon_v2"))))
+                                       (div 2) (div 1) p))]
+                       [else
+                        (sxpath '(html (body (@ (equal? (id "home"))))
+                                       (div (@ (equal? (id "main_content"))))
+                                       (div (@ (equal? (id "right_content"))))
+                                       (section (@ (equal? (class "quote_page_hero_section"))))
+                                       (section (@ (equal? (id "quote_ribbon_v2"))))
+                                       (div 2) (div 1) p))])]
          [zrank-node (zrank-path xexp)])
     (substring (string-trim (second ((select-kids (ntype?? '*text*)) zrank-node))) 2)))
 
@@ -51,11 +60,18 @@
                                (div (@ (equal? (id "right_content"))))
                                (section (@ (equal? (id "quote_ribbon_v2"))))
                                (div 2) (div 3) p (span ,(- (* n 2) 1)))) xexp)]
-              ; Maybe there's a better way to do all of this
+              [(date<? (folder-date) (date 2024 11 10))
+               ((sxpath `(html (body (@ (equal? (id "home"))))
+                               (div (@ (equal? (id "main_content"))))
+                               (div (@ (equal? (id "right_content"))))
+                               (section (@ (equal? (id "quote_ribbon_v2"))))
+                               (div 2) (div 2) p (span ,(- (* n 2) 1)))) xexp)]
+              ; New "quote_page_hero_section" added
               [else
                ((sxpath `(html (body (@ (equal? (id "home"))))
                                (div (@ (equal? (id "main_content"))))
                                (div (@ (equal? (id "right_content"))))
+                               (section (@ (equal? (class "quote_page_hero_section"))))
                                (section (@ (equal? (id "quote_ribbon_v2"))))
                                (div 2) (div 2) p (span ,(- (* n 2) 1)))) xexp)])])
     (third (first x))))
