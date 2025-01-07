@@ -8,7 +8,7 @@
 
 (define base-folder (make-parameter "/var/tmp/dolt/earnings"))
 
-(define start-date (make-parameter (~t (-days (today) 120) "yyyy-MM-dd")))
+(define start-date (make-parameter (~t (-days (today) 250) "yyyy-MM-dd")))
 
 (define end-date (make-parameter (~t (today) "yyyy-MM-dd")))
 
@@ -19,7 +19,7 @@
 (define db-pass (make-parameter ""))
 
 (command-line
- #:program "racket dump-dolt-estimates.rkt"
+ #:program "racket dump-dolt-statements.rkt"
  #:once-each
  [("-b" "--base-folder") folder
                          "Base dolt folder. Defaults to /var/tmp/dolt/earnings"
@@ -34,7 +34,7 @@
                      "Database password"
                      (db-pass password)]
  [("-s" "--start-date") start
-                        "Earliest date for history retrieval. Defaults to today - 120 days"
+                        "Earliest date for history retrieval. Defaults to today minus 250 days"
                         (start-date start)]
  [("-u" "--db-user") user
                      "Database user name. Defaults to 'user'"
