@@ -75,6 +75,16 @@ where
                                                          (displayln e)
                                                          (rollback-transaction dbc))])
                               (start-transaction dbc)
+                              ; if we have a record from last week for this symbol, move it forward
+                              (query-exec dbc "
+delete from
+  zacks.earnings_calendar
+where
+  act_symbol = $1 and
+  date >= $2::text::date - '7 days'::interval
+"
+                                          (first ticker-when-list)
+                                          (~t (folder-date) "yyyy-MM-dd"))
                               (query-exec dbc "
 insert into zacks.earnings_calendar (
   act_symbol,

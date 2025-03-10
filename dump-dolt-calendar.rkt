@@ -38,7 +38,7 @@
 (define dbc (postgresql-connect #:user (db-user) #:database (db-name) #:password (db-pass)))
 
 ; earnings-calendar
-(system (string-append "cd " (base-folder) "; /usr/local/bin/dolt sql -q \"delete from earnings_calendar where date >= '" (as-of-date) "'\";"))
+(system (string-append "cd " (base-folder) "; /usr/local/bin/dolt sql -q \"delete from earnings_calendar where date >= date_sub('" (as-of-date) "', interval 7 day)\";"))
 
 (define earnings-calendar-file (string-append (base-folder) "/earnings-calendar-" (as-of-date) ".csv"))
 
@@ -55,7 +55,7 @@ select
 from
   zacks.earnings_calendar
 where
-  date >= $1::text::date
+  date >= $1::text::date - '7 days'::interval;
 "
                           (as-of-date))))
   #:exists 'replace)
