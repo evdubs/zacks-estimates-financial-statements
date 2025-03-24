@@ -68,7 +68,7 @@ order by
 "
                                       date)))
               #:exists 'replace)
-            (system (string-append "cd " (base-folder) "; /usr/local/bin/dolt table import -u rank_score rank-score-" date ".csv")))
+            (system (string-append "cd " (base-folder) "; /usr/local/bin/dolt table import -u --continue rank_score rank-score-" date ".csv")))
           (query-list dbc "
 select distinct
   date::text
@@ -115,7 +115,7 @@ order by
 "
                                       date)))
               #:exists 'replace)
-            (system (string-append "cd " (base-folder) "; /usr/local/bin/dolt table import -u eps_estimate eps-estimate-" date ".csv")))
+            (system (string-append "cd " (base-folder) "; /usr/local/bin/dolt table import -u --continue eps_estimate eps-estimate-" date ".csv")))
           (query-list dbc "
 select distinct
   date::text
@@ -161,7 +161,7 @@ order by
 "
                                       date)))
               #:exists 'replace)
-            (system (string-append "cd " (base-folder) "; /usr/local/bin/dolt table import -u sales_estimate sales-estimate-" date ".csv")))
+            (system (string-append "cd " (base-folder) "; /usr/local/bin/dolt table import -u --continue sales_estimate sales-estimate-" date ".csv")))
           (query-list dbc "
 select distinct
   date::text
@@ -202,7 +202,7 @@ order by
 "
                                       date)))
               #:exists 'replace)
-            (system (string-append "cd " (base-folder) "; /usr/local/bin/dolt table import -u eps_history eps-history-" date ".csv")))
+            (system (string-append "cd " (base-folder) "; /usr/local/bin/dolt table import -u --continue eps_history eps-history-" date ".csv")))
           (query-list dbc "
 select distinct
   period_end_date::text

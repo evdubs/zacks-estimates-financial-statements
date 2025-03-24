@@ -77,7 +77,7 @@ order by
 "
                                       date)))
               #:exists 'replace)
-            (system (string-append "cd " (base-folder) "; /usr/local/bin/dolt table import -u balance_sheet_assets balance-sheet-assets-" date ".csv")))
+            (system (string-append "cd " (base-folder) "; /usr/local/bin/dolt table import -u --continue balance_sheet_assets balance-sheet-assets-" date ".csv")))
           (query-list dbc "
 select distinct
   date::text
@@ -127,7 +127,7 @@ order by
 "
                                       date)))
               #:exists 'replace)
-            (system (string-append "cd " (base-folder) "; /usr/local/bin/dolt table import -u balance_sheet_equity balance-sheet-equity-" date ".csv")))
+            (system (string-append "cd " (base-folder) "; /usr/local/bin/dolt table import -u --continue balance_sheet_equity balance-sheet-equity-" date ".csv")))
           (query-list dbc "
 select distinct
   date::text
@@ -183,7 +183,7 @@ order by
 "
                                       date)))
               #:exists 'replace)
-            (system (string-append "cd " (base-folder) "; /usr/local/bin/dolt table import -u balance_sheet_liabilities balance-sheet-liabilities-" date ".csv")))
+            (system (string-append "cd " (base-folder) "; /usr/local/bin/dolt table import -u --continue balance_sheet_liabilities balance-sheet-liabilities-" date ".csv")))
           (query-list dbc "
 select distinct
   date::text
@@ -245,7 +245,7 @@ order by
 "
                                       date)))
               #:exists 'replace)
-            (system (string-append "cd " (base-folder) "; /usr/local/bin/dolt table import -u cash_flow_statement cash-flow-statement-" date ".csv")))
+            (system (string-append "cd " (base-folder) "; /usr/local/bin/dolt table import -u --continue cash_flow_statement cash-flow-statement-" date ".csv")))
           (query-list dbc "
 select distinct
   date::text
@@ -305,7 +305,7 @@ order by
 "
                                       date)))
               #:exists 'replace)
-            (system (string-append "cd " (base-folder) "; /usr/local/bin/dolt table import -u income_statement income-statement-" date ".csv")))
+            (system (string-append "cd " (base-folder) "; /usr/local/bin/dolt table import -u --continue income_statement income-statement-" date ".csv")))
           (query-list dbc "
 select distinct
   date::text
