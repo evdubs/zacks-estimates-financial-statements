@@ -146,11 +146,10 @@ CREATE TABLE zacks.eps_estimate
 CREATE TABLE zacks.eps_history
 (
     act_symbol text NOT NULL,
-    date date NOT NULL,
     period_end_date date NOT NULL,
     reported numeric,
     estimate numeric,
-    CONSTRAINT eps_history_pkey PRIMARY KEY (date, act_symbol, period_end_date),
+    CONSTRAINT eps_history_pkey PRIMARY KEY (act_symbol, period_end_date),
     CONSTRAINT eps_history_act_symbol_fkey FOREIGN KEY (act_symbol)
         REFERENCES nasdaq.symbol (act_symbol) MATCH SIMPLE
         ON UPDATE NO ACTION

@@ -105,6 +105,48 @@ insert into zacks.earnings_calendar (
                                           (fourth ticker-when-list))
                               (commit-transaction dbc))) _))))))))
 
+; remove estimated dates when the estimate moves
+(query-exec dbc "
+delete from
+  zacks.earnings_calendar ec
+using
+  (select
+    ec.act_symbol,
+    max(ec.date) as max_date,
+    bsa.date as bsa_date
+  from
+    zacks.earnings_calendar ec
+  join
+    (select distinct
+      act_symbol,
+      date
+    from
+      zacks.balance_sheet_assets bsa
+    union
+      (select
+        act_symbol,
+        (((max(date) + '1 day'::interval) + '3 months'::interval) - '1 day'::interval)::date
+      from
+        zacks.balance_sheet_assets
+      group by
+        act_symbol)
+    order by
+      act_symbol,
+      date) bsa
+  on
+    ec.act_symbol = bsa.act_symbol and
+    ec.date > bsa.date and
+    ec.date <= ((bsa.date + '1 day'::interval) + '3 months'::interval) - '1 day'::interval
+  group by
+    ec.act_symbol,
+    bsa.date) ecm
+where
+  ec.act_symbol = ecm.act_symbol and
+  ec.date != max_date and
+  ec.date > bsa_date and
+  ec.date <= ((bsa_date + '1 day'::interval) + '3 months'::interval) - '1 day'::interval;
+")
+
 ; vacuum (garbage collect) and reindex table as we deleted from it earlier
 (query-exec dbc "
 vacuum full freeze analyze zacks.earnings_calendar;

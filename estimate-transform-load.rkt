@@ -409,26 +409,23 @@ insert into zacks.eps_perception
 insert into zacks.eps_history
 (
   act_symbol,
-  date,
   period_end_date,
   reported,
   estimate
 ) values (
   $1,
-  $2::text::date,
-  to_date($3, 'DD/MM/YYYY') + interval '1 month' - interval '1 day',
+  to_date($2, 'DD/MM/YYYY') + interval '1 month' - interval '1 day',
+  case $3
+    when 'NA' then NULL
+    else $3::decimal
+  end,
   case $4
     when 'NA' then NULL
     else $4::decimal
-  end,
-  case $5
-    when 'NA' then NULL
-    else $5::decimal
   end
-) on conflict (act_symbol, date, period_end_date) do nothing;
+) on conflict (act_symbol, period_end_date) do nothing;
 "
                                             ticker-symbol
-                                            (~t (folder-date) "yyyy-MM-dd")
                                             (string-append "01/" (estimate-figure xexp #:section 'eps-surprise #:period quarter #:entry 'date))
                                             (estimate-figure xexp #:section 'eps-surprise #:period quarter #:entry 'reported)
                                             (estimate-figure xexp #:section 'eps-surprise #:period quarter #:entry 'estimate)))
