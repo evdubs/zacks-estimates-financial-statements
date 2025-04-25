@@ -60,6 +60,37 @@ where
                           (as-of-date))))
   #:exists 'replace)
 
+(system (string-append "cd " (base-folder) "; /usr/local/bin/dolt sql -q \"
+with ecm (act_symbol, max_date, bsa_date) as (
+  select
+    ec.act_symbol,
+    max(ec.date),
+    bsa.date
+  from
+    earnings_calendar ec
+  join
+    balance_sheet_assets bsa
+  on
+    ec.act_symbol = bsa.act_symbol and
+    ec.date > bsa.date and
+    ec.date <= date_sub(date_add(date_add(bsa.date, interval 1 day), interval 3 month), interval 1 day)
+  group by
+    ec.act_symbol,
+    bsa.date
+)
+delete
+  ec
+from
+  earnings_calendar ec
+join
+  ecm
+where
+  ec.act_symbol = ecm.act_symbol and
+  ec.date != ecm.max_date and
+  ec.date > ecm.bsa_date and
+  ec.date <= date_sub(date_add(date_add(ecm.bsa_date, interval 1 day), interval 3 month), interval 1 day);
+\""))
+
 (system (string-append "cd " (base-folder) "; /usr/local/bin/dolt table import -u --continue earnings_calendar earnings-calendar-" (as-of-date) ".csv"))
 
 (system (string-append "cd " (base-folder) "; /usr/local/bin/dolt add earnings_calendar; "
