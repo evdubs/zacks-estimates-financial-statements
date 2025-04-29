@@ -69,7 +69,22 @@ with ecm (act_symbol, max_date, bsa_date) as (
   from
     earnings_calendar ec
   join
-    balance_sheet_assets bsa
+    (select distinct
+      act_symbol,
+      date
+    from
+      balance_sheet_assets bsa
+    union
+      (select
+        act_symbol,
+        date_sub(date_add(date_add(date, interval 1 day), interval 3 month), interval 1 day)
+      from
+        balance_sheet_assets
+      group by
+        act_symbol)
+    order by
+      act_symbol,
+      date) bsa
   on
     ec.act_symbol = bsa.act_symbol and
     ec.date > bsa.date and
