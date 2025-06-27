@@ -255,6 +255,16 @@ CREATE TABLE zacks.sales_estimate
         ON DELETE NO ACTION
 );
 
+CREATE TABLE zacks.dividend_calendar
+(
+    act_symbol text NOT NULL,
+    ex_date date NOT NULL,
+    amount decimal NOT NULL,
+    payable_date date,
+    CONSTRAINT dividend_calendar_pk PRIMARY KEY (act_symbol, ex_date),
+    CONSTRAINT dividend_calendar_act_symbol_fkey FOREIGN KEY (act_symbol) REFERENCES nasdaq.symbol(act_symbol)
+);
+
 CREATE TABLE zacks.earnings_calendar
 (
     act_symbol text NOT NULL,
