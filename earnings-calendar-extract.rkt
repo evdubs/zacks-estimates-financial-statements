@@ -20,7 +20,8 @@
                        (λ (error)
                          (displayln (string-append "Encountered error for " (~t date "yyyy-MM-dd")))
                          (displayln error))])
-        (~> (string-append "https://www.zacks.com/includes/classes/z2_class_calendarfunctions_data.php?calltype=eventscal&date="
+        (~> (string-append "https://www.zacks.com/includes/classes/z2_class_calendarfunctions_data.php"
+                           "?calltype=eventscal&type=1&date="
                            (number->string (->posix (at-time date (time 6)))))
             (get _)
             (response-body _)
