@@ -10,7 +10,7 @@
          racket/string
          threading)
 
-(define base-folder (make-parameter "/var/tmp/zacks/dividend-calendar"))
+(define base-folder (make-parameter "/var/local/zacks/dividend-calendar"))
 
 (define folder-date (make-parameter (today)))
 
@@ -24,7 +24,7 @@
  #:program "racket transform-load.rkt"
  #:once-each
  [("-b" "--base-folder") folder
-                         "Dividend Calendar base folder. Defaults to /var/tmp/zacks/dividend-calendar"
+                         "Dividend Calendar base folder. Defaults to /var/local/zacks/dividend-calendar"
                          (base-folder folder)]
  [("-d" "--folder-date") date
                          "Dividend Calendar folder date. Defaults to today"

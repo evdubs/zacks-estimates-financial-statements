@@ -42,7 +42,7 @@
       (string-append (vector-ref vec 0) "," (vector->csv-line (vector-drop vec 1)))))
 
 (for-each (λ (date)
-            (call-with-output-file (string-append "/var/tmp/dat/zacks/eps-estimate/" date ".csv")
+            (call-with-output-file (string-append "/var/local/dat/zacks/eps-estimate/" date ".csv")
               (λ (out)
                 (displayln "act_symbol,date,period,period_end_date,consensus,recent,count,high,low,year_ago" out)
                 (for-each (λ (row)
@@ -89,7 +89,7 @@ order by
                       (end-date)))
 
 (for-each (λ (date)
-            (call-with-output-file (string-append "/var/tmp/dat/zacks/sales-estimate/" date ".csv")
+            (call-with-output-file (string-append "/var/local/dat/zacks/sales-estimate/" date ".csv")
               (λ (out)
                 (displayln "act_symbol,date,period,period_end_date,consensus,count,high,low,year_ago" out)
                 (for-each (λ (row)

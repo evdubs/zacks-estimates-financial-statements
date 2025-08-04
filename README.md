@@ -39,7 +39,7 @@ racket estimate-extract.rkt [ <option> ... ]
 $ racket estimate-transform-load.rkt -h
 racket estimate-transform-load.rkt [ <option> ... ]
  where <option> is one of
-  -b <folder>, --base-folder <folder> : Zacks estimates base folder. Defaults to /var/tmp/zacks/estimates
+  -b <folder>, --base-folder <folder> : Zacks estimates base folder. Defaults to /var/local/zacks/estimates
   -d <date>, --folder-date <date> : Zacks estimates folder date. Defaults to today
   -n <name>, --db-name <name> : Database name. Defaults to 'local'
   -p <password>, --db-pass <password> : Database password
@@ -65,7 +65,7 @@ racket financial-statement-extract.rkt [ <option> ... ]
 $ racket balance-sheet-transform-load.rkt -h
 racket balance-sheet-transform-load.rkt [ <option> ... ]
  where <option> is one of
-  -b <folder>, --base-folder <folder> : Zacks balance sheet base folder. Defaults to /var/tmp/zacks/balance-sheet
+  -b <folder>, --base-folder <folder> : Zacks balance sheet base folder. Defaults to /var/local/zacks/balance-sheet
   -d <date>, --folder-date <date> : Zacks balance sheet folder date. Defaults to today
   -n <name>, --db-name <name> : Database name. Defaults to 'local'
   -p <password>, --db-pass <password> : Database password
@@ -78,7 +78,7 @@ racket balance-sheet-transform-load.rkt [ <option> ... ]
 $ racket cash-flow-statement-transform-load.rkt -h
 racket cash-flow-statement-transform-load.rkt [ <option> ... ]
  where <option> is one of
-  -b <folder>, --base-folder <folder> : Zacks cash flow statement base folder. Defaults to /var/tmp/zacks/cash-flow-statement
+  -b <folder>, --base-folder <folder> : Zacks cash flow statement base folder. Defaults to /var/local/zacks/cash-flow-statement
   -d <date>, --folder-date <date> : Zacks cash flow statement folder date. Defaults to today
   -n <name>, --db-name <name> : Database name. Defaults to 'local'
   -p <password>, --db-pass <password> : Database password
@@ -91,7 +91,7 @@ racket cash-flow-statement-transform-load.rkt [ <option> ... ]
 $ racket income-statement-transform-load.rkt -h
 racket income-statement-transform-load.rkt [ <option> ... ]
  where <option> is one of
-  -b <folder>, --base-folder <folder> : Zacks income statement base folder. Defaults to /var/tmp/zacks/income-statement
+  -b <folder>, --base-folder <folder> : Zacks income statement base folder. Defaults to /var/local/zacks/income-statement
   -d <date>, --folder-date <date> : Zacks income statement folder date. Defaults to today
   -n <name>, --db-name <name> : Database name. Defaults to 'local'
   -p <password>, --db-pass <password> : Database password
@@ -114,7 +114,7 @@ racket earnings-calendar-extract.rkt [ <option> ... ]
 $ racket earnings-calendar-transform-load.rkt -h
 racket transform-load.rkt [ <option> ... ]
  where <option> is one of
-  -b <folder>, --base-folder <folder> : Earnings Calendar base folder. Defaults to /var/tmp/zacks/earnings-calendar
+  -b <folder>, --base-folder <folder> : Earnings Calendar base folder. Defaults to /var/local/zacks/earnings-calendar
   -d <date>, --folder-date <date> : Earnings Calendar folder date. Defaults to today
   -n <name>, --db-name <name> : Database name. Defaults to 'local'
   -p <password>, --db-pass <password> : Database password
@@ -126,7 +126,7 @@ racket transform-load.rkt [ <option> ... ]
 ```
 
 The provided `schema.sql` file shows the expected schema within the target PostgreSQL instance. 
-This process assumes you can write to a `/var/tmp/zacks` folder. This process also assumes you have loaded your database with NASDAQ symbol
+This process assumes you can write to a `/var/local/zacks` folder. This process also assumes you have loaded your database with NASDAQ symbol
 file information. This data is provided by the [nasdaq-symbols](https://github.com/evdubs/nasdaq-symbols) project.
 
 The above process will download around 2GB worth of HTML documents over many hours. It is encouraged to compress these files when you are 

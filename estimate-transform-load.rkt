@@ -38,7 +38,7 @@
               ; Reports downloaded before 2018-10-07 used a slightly different sxpath
               ; The following code might be helpful for finding these differences in the future:
               ; 
-              ; (define in-file (open-input-file "/var/tmp/zacks/estimates/2017-10-26/AA.detailed-estimates.html"))
+              ; (define in-file (open-input-file "/var/local/zacks/estimates/2017-10-26/AA.detailed-estimates.html"))
               ; (define in-xexp (html->xexp in-file))
               ; (webscraperhelper '(td (@ (class "alpha")) "Down Last 60 Days") in-xexp)
               [(date<? (folder-date) (date 2018 10 7))
@@ -124,7 +124,7 @@
         (string-replace _ ")" "")
         (string-replace _ "," ""))))
 
-(define base-folder (make-parameter "/var/tmp/zacks/estimates"))
+(define base-folder (make-parameter "/var/local/zacks/estimates"))
 
 (define folder-date (make-parameter (today)))
 
@@ -138,7 +138,7 @@
  #:program "racket estimate-transform-load.rkt"
  #:once-each
  [("-b" "--base-folder") folder
-                         "Zacks estimates base folder. Defaults to /var/tmp/zacks/estimates"
+                         "Zacks estimates base folder. Defaults to /var/local/zacks/estimates"
                          (base-folder folder)]
  [("-d" "--folder-date") date
                          "Zacks estimates folder date. Defaults to today"

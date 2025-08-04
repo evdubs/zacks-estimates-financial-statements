@@ -46,7 +46,7 @@
                                            ['cash-at-end-of-period (values 10 `tbody `td)]
                                            ['diluted-net-eps (values 11 `tbody `td)])])
     (~>
-     ; (define in-file (open-input-file "/var/tmp/zacks/cash-flow-statement/2018-05-08/AA.cash-flow-statement.html"))
+     ; (define in-file (open-input-file "/var/local/zacks/cash-flow-statement/2018-05-08/AA.cash-flow-statement.html"))
      ; (define in-xexp (html->xexp in-file))
      ; (webscraperhelper '(td (@ (class "alpha")) "Investments") in-xexp)
      ((sxpath `(// (section (@ (equal? (id ,section-id))))
@@ -56,7 +56,7 @@
      (string-trim _)
      (string-replace _ "," ""))))
 
-(define base-folder (make-parameter "/var/tmp/zacks/cash-flow-statement"))
+(define base-folder (make-parameter "/var/local/zacks/cash-flow-statement"))
 
 (define folder-date (make-parameter (today)))
 
@@ -70,7 +70,7 @@
  #:program "racket cash-flow-statement-transform-load.rkt"
  #:once-each
  [("-b" "--base-folder") folder
-                         "Zacks cash flow statement base folder. Defaults to /var/tmp/zacks/cash-flow-statement"
+                         "Zacks cash flow statement base folder. Defaults to /var/local/zacks/cash-flow-statement"
                          (base-folder folder)]
  [("-d" "--folder-date") date
                          "Zacks cash flow statement folder date. Defaults to today"

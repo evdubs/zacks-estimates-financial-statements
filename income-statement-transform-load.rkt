@@ -44,7 +44,7 @@
                                                     ['diluted-eps-before-non-recurring-items (values (+ 2 period-offset) 2 `tbody `td)]
                                                     ['diluted-net-eps (values (+ 2 period-offset) 3 `tbody `td)])])
     (~>
-     ; (define in-file (open-input-file "/var/tmp/zacks/income-statement/2018-05-08/AA.income-statement.html"))
+     ; (define in-file (open-input-file "/var/local/zacks/income-statement/2018-05-08/AA.income-statement.html"))
      ; (define in-xexp (html->xexp in-file))
      ; (webscraperhelper '(td (@ (class "alpha")) "Sales") in-xexp)
      ((sxpath `(// (div (@ (equal? (id ,section-id))))
@@ -54,7 +54,7 @@
      (string-trim _)
      (string-replace _ "," ""))))
 
-(define base-folder (make-parameter "/var/tmp/zacks/income-statement"))
+(define base-folder (make-parameter "/var/local/zacks/income-statement"))
 
 (define folder-date (make-parameter (today)))
 
@@ -68,7 +68,7 @@
  #:program "racket income-statement-transform-load.rkt"
  #:once-each
  [("-b" "--base-folder") folder
-                         "Zacks income statement base folder. Defaults to /var/tmp/zacks/income-statement"
+                         "Zacks income statement base folder. Defaults to /var/local/zacks/income-statement"
                          (base-folder folder)]
  [("-d" "--folder-date") date
                          "Zacks income statement folder date. Defaults to today"

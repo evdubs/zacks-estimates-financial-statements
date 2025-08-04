@@ -67,7 +67,7 @@
                                            ['shares-outstanding (values 10 `tbody `td)]
                                            ['book-value-per-share (values 11 `tbody `td)])])
     (~>
-     ; (define in-file (open-input-file "/var/tmp/zacks/balance-sheet/2018-05-08/AA.balance-sheet.html"))
+     ; (define in-file (open-input-file "/var/local/zacks/balance-sheet/2018-05-08/AA.balance-sheet.html"))
      ; (define in-xexp (html->xexp in-file))
      ; (webscraperhelper '(td (@ (class "alpha")) "Preferred Stock") in-xexp)
      ((sxpath `(// (div (@ (equal? (id ,section-id))))
@@ -77,7 +77,7 @@
      (string-trim _)
      (string-replace _ "," ""))))
 
-(define base-folder (make-parameter "/var/tmp/zacks/balance-sheet"))
+(define base-folder (make-parameter "/var/local/zacks/balance-sheet"))
 
 (define folder-date (make-parameter (today)))
 
@@ -91,7 +91,7 @@
  #:program "racket balance-sheet-transform-load.rkt"
  #:once-each
  [("-b" "--base-folder") folder
-                         "Zacks balance sheet base folder. Defaults to /var/tmp/zacks/balance-sheet"
+                         "Zacks balance sheet base folder. Defaults to /var/local/zacks/balance-sheet"
                          (base-folder folder)]
  [("-d" "--folder-date") date
                          "Zacks balance sheet folder date. Defaults to today"
