@@ -77,7 +77,7 @@ with ecm (act_symbol, max_date, bsa_date) as (
     union
       (select
         act_symbol,
-        date_sub(date_add(date_add(date, interval 1 day), interval 3 month), interval 1 day)
+        date_sub(date_add(date_add(max(date), interval 1 day), interval 3 month), interval 1 day)
       from
         balance_sheet_assets
       group by
